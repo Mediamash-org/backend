@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+dist/
+plugins/*/dist/
+plugins/*/node_modules/
+
+# Environment
+.env
+.env.local
+
+# Logs / OS
+*.log
+.DS_Store
+Thumbs.db
+
+# IDE / coverage
+.idea/
+.vscode/
+coverage/

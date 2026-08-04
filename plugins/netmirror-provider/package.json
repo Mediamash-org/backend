@@ -1,0 +1,30 @@
+{
+  "name": "@omss-server/netmirror-provider",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "OMSS BaseProvider plugin ported from NetMirror Cloudstream extension (net27.cc)",
+  "license": "GPL-3.0-or-later",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "peerDependencies": {
+    "@omss/framework": "^1.1.0"
+  },
+  "devDependencies": {
+    "@omss/framework": "^1.1.26",
+    "typescript": "^5.6.2"
+  },
+  "engines": {
+    "node": ">=20.6.0"
+  }
+}

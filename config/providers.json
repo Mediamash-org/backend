@@ -1,0 +1,22 @@
+{
+  "localDirectories": ["./src/providers"],
+  "plugins": [
+    {
+      "package": "@omss-server/sample-provider-plugin",
+      "enabled": true,
+      "config": {
+        "id": "sample-plugin",
+        "name": "Sample Plugin Provider"
+      }
+    },
+    {
+      "package": "@omss-server/netmirror-provider",
+      "enabled": true,
+      "config": {
+        "id": "netmirror",
+        "name": "NetMirror"
+      }
+    }
+  ],
+  "disabled": []
+}

@@ -1,0 +1,26 @@
+{
+  "name": "@omss-server/sample-provider-plugin",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Sample OMSS provider plugin (BaseProvider) for install-via-package demos",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "peerDependencies": {
+    "@omss/framework": "^1.1.0"
+  },
+  "devDependencies": {
+    "@omss/framework": "^1.1.26",
+    "typescript": "^5.6.2"
+  }
+}
