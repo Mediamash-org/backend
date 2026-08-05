@@ -38,7 +38,8 @@ VidSrc: `@omss-server/vidsrc-provider` — see [`plugins/vidsrc-provider`](plugi
 2Embed: `@omss-server/twoembed-provider` — see [`plugins/twoembed-provider`](plugins/twoembed-provider) ([2embed.online](https://www.2embed.online/))  
 Bingr: `@omss-server/bingr-provider` — see [`plugins/bingr-provider`](plugins/bingr-provider) ([bingr.one](https://bingr.one/home))  
 StreamingUnity: `@omss-server/streamingunity-provider` — see [`plugins/streamingunity-provider`](plugins/streamingunity-provider) ([streamingunity.vip](https://streamingunity.vip/))  
-Filmo: `@omss-server/filmo-provider` — see [`plugins/filmo-provider`](plugins/filmo-provider) ([filmo.to](https://filmo.to/), movies only via VOE)
+Filmo: `@omss-server/filmo-provider` — see [`plugins/filmo-provider`](plugins/filmo-provider) ([filmo.to](https://filmo.to/), movies only via VOE)  
+Pikashow: `@omss-server/pikashow-provider` — see [`plugins/pikashow-provider`](plugins/pikashow-provider) (CNCVerse CloudStream port → [manoda.co](https://manoda.co/))
 
 Admin (not OMSS): `GET /admin/providers`, `POST /admin/providers/:id/enable|disable`, `POST /admin/providers/reload`  
 Sample console: [`public/`](public/) served at `/ui`

@@ -174,6 +174,7 @@
         const preferred =
           state.sources.find((s) => s.provider?.id === 'streamingunity') ||
           state.sources.find((s) => s.provider?.id === 'filmo') ||
+          state.sources.find((s) => s.provider?.id === 'pikashow') ||
           state.sources.find((s) => s.provider?.id === 'bingr') ||
           state.sources.find((s) => s.provider?.id === '2embed') ||
           state.sources.find(

@@ -67,6 +67,15 @@
         "id": "filmo",
         "name": "Filmo"
       }
+    },
+    {
+      "package": "@omss-server/pikashow-provider",
+      "enabled": true,
+      "config": {
+        "id": "pikashow",
+        "name": "Pikashow",
+        "preferredLangs": ["English", "Hindi"]
+      }
     }
   ],
   "disabled": []
