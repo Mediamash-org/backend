@@ -14,8 +14,31 @@
       "enabled": true,
       "config": {
         "id": "netmirror",
-        "name": "NetMirror",
-        "fetchDubs": true
+        "name": "NetMirror"
+      }
+    },
+    {
+      "package": "@omss-server/peachify-provider",
+      "enabled": true,
+      "config": {
+        "id": "peachify",
+        "name": "Peachify"
+      }
+    },
+    {
+      "package": "@omss-server/vidsrc-provider",
+      "enabled": true,
+      "config": {
+        "id": "vidsrc",
+        "name": "VidSrc"
+      }
+    },
+    {
+      "package": "@omss-server/twoembed-provider",
+      "enabled": true,
+      "config": {
+        "id": "2embed",
+        "name": "2Embed"
       }
     }
   ],

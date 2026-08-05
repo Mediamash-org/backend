@@ -127,10 +127,15 @@ export function registerFixedProxy(app: FastifyInstance): void {
         return reply.send(nodeStream)
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown error'
+        const code =
+          error instanceof Error && 'cause' in error
+            ? String((error as Error & { cause?: { code?: unknown } }).cause?.code ?? '')
+            : ''
+        const detail = code ? ` (${code})` : ''
         return reply.code(500).send({
           error: {
             code: 'INTERNAL_ERROR',
-            message: `Failed to proxy request: ${message}`,
+            message: `Failed to proxy request: ${message}${detail}`,
           },
           traceId: request.id,
         })

@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build:plugins": "tsc -p plugins/sample-provider-plugin/tsconfig.json && tsc -p plugins/netmirror-provider/tsconfig.json",
+    "build:plugins": "tsc -p plugins/sample-provider-plugin/tsconfig.json && tsc -p plugins/netmirror-provider/tsconfig.json && tsc -p plugins/peachify-provider/tsconfig.json && tsc -p plugins/vidsrc-provider/tsconfig.json && tsc -p plugins/twoembed-provider/tsconfig.json",
     "build": "npm run build:plugins && tsc",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
@@ -20,7 +20,10 @@
   },
   "dependencies": {
     "@omss-server/netmirror-provider": "file:plugins/netmirror-provider",
+    "@omss-server/peachify-provider": "file:plugins/peachify-provider",
     "@omss-server/sample-provider-plugin": "file:plugins/sample-provider-plugin",
+    "@omss-server/twoembed-provider": "file:plugins/twoembed-provider",
+    "@omss-server/vidsrc-provider": "file:plugins/vidsrc-provider",
     "@omss/framework": "^1.1.26",
     "dotenv": "^16.4.5",
     "fastify": "^5.7.1"

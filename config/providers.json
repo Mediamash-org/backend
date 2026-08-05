@@ -3,7 +3,7 @@
   "plugins": [
     {
       "package": "@omss-server/sample-provider-plugin",
-      "enabled": true,
+      "enabled": false,
       "config": {
         "id": "sample-plugin",
         "name": "Sample Plugin Provider"
@@ -15,6 +15,31 @@
       "config": {
         "id": "netmirror",
         "name": "NetMirror"
+      }
+    },
+    {
+      "package": "@omss-server/peachify-provider",
+      "enabled": true,
+      "config": {
+        "id": "peachify",
+        "name": "Peachify",
+        "servers": ["holly", "air", "multi", "moviebox", "net"]
+      }
+    },
+    {
+      "package": "@omss-server/vidsrc-provider",
+      "enabled": true,
+      "config": {
+        "id": "vidsrc",
+        "name": "VidSrc"
+      }
+    },
+    {
+      "package": "@omss-server/twoembed-provider",
+      "enabled": true,
+      "config": {
+        "id": "2embed",
+        "name": "2Embed"
       }
     }
   ],

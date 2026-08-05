@@ -31,6 +31,9 @@ Two install paths (both use official `BaseProvider` — see [docs/PROVIDERS.md](
 **Authoring plugins:** [docs/PROVIDER_PLUGIN_GUIDE.md](docs/PROVIDER_PLUGIN_GUIDE.md)
 
 Sample plugin: `@omss-server/sample-provider-plugin`  
-NetMirror plugin (from `NetMirror-Extension-master`): `@omss-server/netmirror-provider` — see [`plugins/netmirror-provider`](plugins/netmirror-provider)
+NetMirror: `@omss-server/netmirror-provider`  
+Peachify: `@omss-server/peachify-provider` — see [`plugins/peachify-provider`](plugins/peachify-provider)  
+VidSrc: `@omss-server/vidsrc-provider` — see [`plugins/vidsrc-provider`](plugins/vidsrc-provider) ([cinepro port](https://github.com/cinepro-org/core/blob/main/src/providers/vidsrc/vidsrc.ts))  
+2Embed: `@omss-server/twoembed-provider` — see [`plugins/twoembed-provider`](plugins/twoembed-provider) ([2embed.online](https://www.2embed.online/))
 
 Admin (not OMSS): `GET /admin/providers`, `POST /admin/providers/:id/enable|disable`
