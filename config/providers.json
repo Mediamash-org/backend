@@ -41,6 +41,32 @@
         "id": "2embed",
         "name": "2Embed"
       }
+    },
+    {
+      "package": "@omss-server/bingr-provider",
+      "enabled": true,
+      "config": {
+        "id": "bingr",
+        "name": "Bingr",
+        "servers": ["s11", "s30", "s3", "s4"]
+      }
+    },
+    {
+      "package": "@omss-server/streamingunity-provider",
+      "enabled": true,
+      "config": {
+        "id": "streamingunity",
+        "name": "StreamingUnity",
+        "locale": "en"
+      }
+    },
+    {
+      "package": "@omss-server/filmo-provider",
+      "enabled": true,
+      "config": {
+        "id": "filmo",
+        "name": "Filmo"
+      }
     }
   ],
   "disabled": []

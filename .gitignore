@@ -13,7 +13,8 @@ plugins/*/node_modules/
 .DS_Store
 Thumbs.db
 
-# IDE / coverage
+# IDE / coverage / local probes
 .idea/
 .vscode/
 coverage/
+tmp/

@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build:plugins": "tsc -p plugins/sample-provider-plugin/tsconfig.json && tsc -p plugins/netmirror-provider/tsconfig.json && tsc -p plugins/peachify-provider/tsconfig.json && tsc -p plugins/vidsrc-provider/tsconfig.json && tsc -p plugins/twoembed-provider/tsconfig.json",
+    "build:plugins": "tsc -p plugins/sample-provider-plugin/tsconfig.json && tsc -p plugins/netmirror-provider/tsconfig.json && tsc -p plugins/peachify-provider/tsconfig.json && tsc -p plugins/vidsrc-provider/tsconfig.json && tsc -p plugins/twoembed-provider/tsconfig.json && tsc -p plugins/bingr-provider/tsconfig.json && tsc -p plugins/streamingunity-provider/tsconfig.json && tsc -p plugins/filmo-provider/tsconfig.json",
     "build": "npm run build:plugins && tsc",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
@@ -19,9 +19,12 @@
     "postinstall": "npm run build:plugins"
   },
   "dependencies": {
+    "@omss-server/bingr-provider": "file:plugins/bingr-provider",
+    "@omss-server/filmo-provider": "file:plugins/filmo-provider",
     "@omss-server/netmirror-provider": "file:plugins/netmirror-provider",
     "@omss-server/peachify-provider": "file:plugins/peachify-provider",
     "@omss-server/sample-provider-plugin": "file:plugins/sample-provider-plugin",
+    "@omss-server/streamingunity-provider": "file:plugins/streamingunity-provider",
     "@omss-server/twoembed-provider": "file:plugins/twoembed-provider",
     "@omss-server/vidsrc-provider": "file:plugins/vidsrc-provider",
     "@omss/framework": "^1.1.26",
