@@ -16,6 +16,7 @@ npm run dev
 
 Server: `http://localhost:3000`
 
+- **Console UI:** [`http://localhost:3000/ui`](http://localhost:3000/ui) — manage providers + test playback  
 - `GET /` / `GET /v1` — backend info + providers  
 - `GET /v1/movies/{tmdbId}` — movie sources  
 - `GET /v1/tv/{id}/seasons/{s}/episodes/{e}` — episode sources  
@@ -36,4 +37,5 @@ Peachify: `@omss-server/peachify-provider` — see [`plugins/peachify-provider`]
 VidSrc: `@omss-server/vidsrc-provider` — see [`plugins/vidsrc-provider`](plugins/vidsrc-provider) ([cinepro port](https://github.com/cinepro-org/core/blob/main/src/providers/vidsrc/vidsrc.ts))  
 2Embed: `@omss-server/twoembed-provider` — see [`plugins/twoembed-provider`](plugins/twoembed-provider) ([2embed.online](https://www.2embed.online/))
 
-Admin (not OMSS): `GET /admin/providers`, `POST /admin/providers/:id/enable|disable`
+Admin (not OMSS): `GET /admin/providers`, `POST /admin/providers/:id/enable|disable`, `POST /admin/providers/reload`  
+Sample console: [`public/`](public/) served at `/ui`

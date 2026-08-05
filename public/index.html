@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OMSS Console</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/ui/app.css" />
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js" defer></script>
+    <script src="/ui/app.js" defer></script>
+  </head>
+  <body>
+    <div class="atmosphere" aria-hidden="true"></div>
+    <div class="shell">
+      <header class="top">
+        <div class="brand-block">
+          <p class="eyebrow">Open Media Streaming</p>
+          <h1 class="brand">OMSS</h1>
+          <p class="tagline">Provider console and playback lab</p>
+        </div>
+        <div class="top-actions">
+          <div class="api-pill" id="apiStatus" data-state="unknown">
+            <span class="dot"></span>
+            <span id="apiStatusText">checking…</span>
+          </div>
+          <button type="button" class="ghost" id="btnReloadAll" title="Reload provider plugins">
+            Reload plugins
+          </button>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="panel providers-panel" aria-labelledby="providersHeading">
+          <div class="panel-head">
+            <div>
+              <h2 id="providersHeading">Providers</h2>
+              <p class="panel-sub">Enable, disable, and health-check installed sources</p>
+            </div>
+            <button type="button" class="ghost compact" id="btnRefreshProviders">Refresh</button>
+          </div>
+          <div id="providerList" class="provider-list" role="list"></div>
+          <p class="empty" id="providersEmpty" hidden>No providers loaded.</p>
+        </section>
+
+        <section class="panel playback-panel" aria-labelledby="playbackHeading">
+          <div class="panel-head">
+            <div>
+              <h2 id="playbackHeading">Playback</h2>
+              <p class="panel-sub">Resolve sources by TMDB id and test the proxied stream</p>
+            </div>
+          </div>
+
+          <form id="resolveForm" class="resolve-form">
+            <div class="segmented" role="group" aria-label="Media type">
+              <button type="button" class="seg active" data-type="movie">Movie</button>
+              <button type="button" class="seg" data-type="tv">TV</button>
+            </div>
+
+            <label class="field">
+              <span>TMDB id</span>
+              <input id="tmdbId" name="tmdbId" inputmode="numeric" placeholder="27205" value="27205" required />
+            </label>
+
+            <div class="tv-fields" id="tvFields" hidden>
+              <label class="field">
+                <span>Season</span>
+                <input id="season" name="season" inputmode="numeric" value="1" min="1" />
+              </label>
+              <label class="field">
+                <span>Episode</span>
+                <input id="episode" name="episode" inputmode="numeric" value="1" min="1" />
+              </label>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="primary" id="btnResolve">Resolve sources</button>
+              <button type="button" class="ghost" id="btnRefreshCache" disabled>Refresh cache</button>
+            </div>
+          </form>
+
+          <div class="player-stage" id="playerStage">
+            <video id="player" controls playsinline></video>
+            <div class="player-overlay" id="playerOverlay">
+              <p>Pick a source below to start playback</p>
+            </div>
+          </div>
+
+          <div class="source-meta" id="sourceMeta" hidden>
+            <span id="sourceCount"></span>
+            <span id="responseId"></span>
+          </div>
+
+          <div id="sourceList" class="source-list" role="list"></div>
+          <p class="empty" id="sourcesEmpty">Resolve a title to see streams.</p>
+          <pre class="diagnostics" id="diagnostics" hidden></pre>
+        </section>
+      </main>
+
+      <footer class="foot">
+        <span>API base: <code id="apiBase"></code></span>
+        <a href="/" target="_blank" rel="noreferrer">OMSS root</a>
+      </footer>
+    </div>
+  </body>
+</html>

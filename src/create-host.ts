@@ -5,6 +5,7 @@ import { ProviderPluginManager } from './plugins/manager.js'
 import { loadProvidersConfig } from './plugins/loader.js'
 import type { ProvidersConfig } from './plugins/types.js'
 import { registerFixedProxy } from './proxy/fixed-proxy.js'
+import { registerUiRoutes } from './ui/register.js'
 
 export interface CreateHostOptions {
   listen?: boolean
@@ -76,6 +77,7 @@ export async function createOmssHost(options: CreateHostOptions = {}): Promise<O
   // Must run before framework /v1/proxy — fixes dual Range header → CDN 416.
   registerFixedProxy(app)
   registerAdminProviderRoutes(app, manager)
+  registerUiRoutes(app)
   registerOmssAlignments(app, manager)
 
   return {
