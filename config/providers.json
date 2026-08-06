@@ -76,6 +76,15 @@
         "name": "Pikashow",
         "preferredLangs": ["English", "Hindi"]
       }
+    },
+    {
+      "package": "@omss-server/vaultplayer-provider",
+      "enabled": true,
+      "config": {
+        "id": "vaultplayer",
+        "name": "VaultPlayer",
+        "maxStreams": 3
+      }
     }
   ],
   "disabled": []

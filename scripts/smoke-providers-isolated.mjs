@@ -10,6 +10,7 @@ const PROVIDERS = [
   'netmirror',
   'peachify',
   'vidsrc',
+  'vaultplayer',
   '2embed',
   'bingr',
   'streamingunity',
