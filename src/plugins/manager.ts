@@ -1,5 +1,10 @@
-import type { BaseProvider, ProviderRegistry } from '@omss/framework'
+import type { BaseProvider, ProviderRegistry, ProviderMediaObject, ProviderResult } from '@omss/framework'
 import { loadProviders, loadProvidersConfig, setProviderEnabled } from './loader.js'
+import {
+  addPlayableFilterDiagnostic,
+  defaultProbeOrigin,
+  filterPlayableSources,
+} from '../playability/filter.js'
 import type { ManagedProvider, ProvidersConfig, ProviderSource } from './types.js'
 
 interface TrackedProvider {
@@ -27,6 +32,7 @@ export class ProviderPluginManager {
     const sourceById = new Map(loaded.map((l) => [l.id, l.source]))
 
     for (const provider of this.registry.getProviders()) {
+      this.wrapProvider(provider)
       this.tracked.set(provider.id, {
         instance: provider,
         source: sourceById.get(provider.id) ?? 'local',
@@ -82,5 +88,43 @@ export class ProviderPluginManager {
     this.registry.clear()
     this.tracked.clear()
     await this.load(config)
+  }
+
+  private wrapProvider(provider: BaseProvider): void {
+    const marker = provider as BaseProvider & { __playabilityWrapped?: boolean }
+    if (marker.__playabilityWrapped) return
+    marker.__playabilityWrapped = true
+
+    provider.getMovieSources = this.wrapResolver(provider, provider.getMovieSources.bind(provider))
+    provider.getTVSources = this.wrapResolver(provider, provider.getTVSources.bind(provider))
+  }
+
+  private wrapResolver(
+    provider: BaseProvider,
+    resolve: (media: ProviderMediaObject) => Promise<ProviderResult>,
+  ): (media: ProviderMediaObject) => Promise<ProviderResult> {
+    return async (media: ProviderMediaObject): Promise<ProviderResult> => {
+      const result = await resolve(media)
+      const sources = Array.isArray(result?.sources) ? result.sources : []
+      if (!sources.length) return result
+
+      const filtered = await filterPlayableSources(
+        sources,
+        defaultProbeOrigin(),
+        Number(process.env.SOURCE_PROBE_TIMEOUT_MS ?? 12_000),
+        Number(process.env.SOURCE_PROBE_CACHE_TTL_MS ?? 180_000),
+      )
+
+      return {
+        ...result,
+        sources: filtered.sources as ProviderResult['sources'],
+        diagnostics: addPlayableFilterDiagnostic(
+          Array.isArray(result?.diagnostics) ? result.diagnostics : [],
+          filtered.removed,
+          'PROVIDER_UNPLAYABLE_SOURCE_FILTERED',
+          `${provider.name}: filtered`,
+        ) as ProviderResult['diagnostics'],
+      }
+    }
   }
 }

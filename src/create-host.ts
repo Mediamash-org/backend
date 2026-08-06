@@ -4,6 +4,10 @@ import { registerAdminProviderRoutes } from './admin/providers.js'
 import { ProviderPluginManager } from './plugins/manager.js'
 import { loadProvidersConfig } from './plugins/loader.js'
 import type { ProvidersConfig } from './plugins/types.js'
+import {
+  addPlayableFilterDiagnostic,
+  filterPlayableSources,
+} from './playability/filter.js'
 import { registerFixedProxy } from './proxy/fixed-proxy.js'
 import { registerUiRoutes } from './ui/register.js'
 
@@ -149,6 +153,28 @@ function registerOmssAlignments(app: FastifyInstance, manager: ProviderPluginMan
 
       if (isSources && typeof body.responseId === 'string' && body.id === undefined) {
         body.id = body.responseId
+      }
+
+      if (isSources) {
+        const sources = Array.isArray(body.sources) ? body.sources : []
+        if (sources.length) {
+          const origin = `${request.protocol}://${request.headers.host || 'localhost'}`
+          const filtered = await filterPlayableSources(
+            sources,
+            origin,
+            Number(process.env.SOURCE_PROBE_TIMEOUT_MS ?? 12_000),
+            Number(process.env.SOURCE_PROBE_CACHE_TTL_MS ?? 180_000),
+          )
+          body.sources = filtered.sources
+          if (filtered.removed > 0) {
+            body.diagnostics = addPlayableFilterDiagnostic(
+              Array.isArray(body.diagnostics) ? body.diagnostics : [],
+              filtered.removed,
+              'UNPLAYABLE_SOURCE_FILTERED',
+              'Filtered',
+            )
+          }
+        }
       }
 
       return JSON.stringify(body)
