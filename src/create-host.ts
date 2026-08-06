@@ -9,6 +9,7 @@ import {
   filterPlayableSources,
 } from './playability/filter.js'
 import { registerFixedProxy } from './proxy/fixed-proxy.js'
+import { registerMetaRoutes } from './meta/register.js'
 import { registerUiRoutes } from './ui/register.js'
 
 export interface CreateHostOptions {
@@ -81,6 +82,7 @@ export async function createOmssHost(options: CreateHostOptions = {}): Promise<O
   // Must run before framework /v1/proxy — fixes dual Range header → CDN 416.
   registerFixedProxy(app)
   registerAdminProviderRoutes(app, manager)
+  registerMetaRoutes(app, env)
   registerUiRoutes(app)
   registerOmssAlignments(app, manager)
 
