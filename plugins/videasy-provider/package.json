@@ -1,0 +1,30 @@
+{
+  "name": "@omss-server/videasy-provider",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "OMSS BaseProvider for Videasy via speedracelight + enc-dec.app",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "peerDependencies": {
+    "@omss/framework": "^1.1.0"
+  },
+  "devDependencies": {
+    "@omss/framework": "^1.1.26",
+    "@types/node": "^22.7.4",
+    "typescript": "^5.6.2"
+  },
+  "engines": {
+    "node": ">=20.6.0"
+  }
+}

@@ -11,6 +11,8 @@ const PROVIDERS = [
   'peachify',
   'vidsrc',
   'vaultplayer',
+  'vidcore',
+  'videasy',
   '2embed',
   'bingr',
   'streamingunity',

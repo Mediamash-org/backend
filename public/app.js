@@ -173,6 +173,8 @@
       if (state.sources.length) {
         const preferred =
           state.sources.find((s) => s.provider?.id === 'vaultplayer') ||
+          state.sources.find((s) => s.provider?.id === 'vidcore') ||
+          state.sources.find((s) => s.provider?.id === 'videasy') ||
           state.sources.find((s) => s.provider?.id === '2embed') ||
           state.sources.find((s) => s.provider?.id === 'bingr') ||
           state.sources.find((s) => s.provider?.id === 'filmo') ||

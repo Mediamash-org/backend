@@ -85,6 +85,25 @@
         "name": "VaultPlayer",
         "maxStreams": 3
       }
+    },
+    {
+      "package": "@omss-server/vidcore-provider",
+      "enabled": true,
+      "config": {
+        "id": "vidcore",
+        "name": "VidCore",
+        "maxStreams": 4
+      }
+    },
+    {
+      "package": "@omss-server/videasy-provider",
+      "enabled": true,
+      "config": {
+        "id": "videasy",
+        "name": "Videasy",
+        "maxStreams": 4,
+        "servers": ["cdn", "m4uhd"]
+      }
     }
   ],
   "disabled": []
