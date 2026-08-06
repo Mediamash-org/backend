@@ -19,7 +19,7 @@
     },
     {
       "package": "@omss-server/peachify-provider",
-      "enabled": true,
+      "enabled": false,
       "config": {
         "id": "peachify",
         "name": "Peachify",
@@ -28,7 +28,7 @@
     },
     {
       "package": "@omss-server/vidsrc-provider",
-      "enabled": true,
+      "enabled": false,
       "config": {
         "id": "vidsrc",
         "name": "VidSrc"
@@ -53,7 +53,7 @@
     },
     {
       "package": "@omss-server/streamingunity-provider",
-      "enabled": true,
+      "enabled": false,
       "config": {
         "id": "streamingunity",
         "name": "StreamingUnity",
