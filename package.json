@@ -19,7 +19,8 @@
     "postinstall": "npm run build:plugins",
     "webos:dev": "npm run dev --prefix apps/webos",
     "webos:build": "npm run build --prefix apps/webos",
-    "webos:package": "npm run package --prefix apps/webos"
+    "webos:package": "npm run package --prefix apps/webos",
+    "release": "node scripts/release.mjs"
   },
   "dependencies": {
     "@omss-server/bingr-provider": "file:plugins/bingr-provider",

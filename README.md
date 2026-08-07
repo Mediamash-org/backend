@@ -1,54 +1,81 @@
-# OMSS Server
+# MediaMash — OMSS Server
 
-OMSS-compliant streaming backend host built on the official [`@omss/framework`](https://github.com/omss-spec/framework).
+Self-hosted [OMSS](https://github.com/omss-spec)-compatible streaming backend for **MediaMash** (catalog API, multi-provider sources, HLS/proxy, optional LG webOS client).
 
-See [docs/OMSS_SPEC.md](docs/OMSS_SPEC.md) and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+Built on [`@omss/framework`](https://github.com/omss-spec/framework).
 
-## Quick start
+[![CI](https://github.com/YOUR_ORG/YOUR_REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_ORG/YOUR_REPO/actions/workflows/ci.yml)
+[![Docker release](https://github.com/YOUR_ORG/YOUR_REPO/actions/workflows/docker-release.yml/badge.svg)](https://github.com/YOUR_ORG/YOUR_REPO/actions/workflows/docker-release.yml)
+
+> After you create the GitHub organization and push this repo, replace `YOUR_ORG` / `YOUR_REPO` in the badges and docs (see [docs/RELEASING.md](docs/RELEASING.md)).
+
+## Features
+
+- OMSS `GET /v1/movies/{id}` · `GET /v1/tv/.../episodes/{e}` · `POST /v1/refresh/{id}` · `/v1/proxy`
+- Pluggable providers (`BaseProvider` + npm plugins under `plugins/`)
+- TMDB-backed `/api/*` catalog for the TV/web clients
+- Production Docker Compose (Redis cache, configurable `PORT`, healthchecks)
+- Automated multi-arch images on GHCR via git tags
+
+## Quick start (dev)
 
 ```bash
-cp .env.example .env
-# set TMDB_API_KEY in .env
-
+cp .env.example .env          # set TMDB_API_KEY
 npm install
 npm run dev
 ```
 
-Server: `http://localhost:3000`
+Open `http://localhost:3000/` (health) and `http://localhost:3000/ui` (console).
 
-## Production (Docker)
+## Production
 
 ```bash
-cp .env.docker.example .env   # set TMDB_API_KEY + PUBLIC_URL
+cp .env.docker.example .env   # TMDB_API_KEY + PUBLIC_URL=https://your.domain
 docker compose up -d --build
 ```
 
-Full TLS, Redis, reverse-proxy, and ops guide: **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**
+Or pull a released image after the first GitHub Release:
 
-- **Console UI:** [`http://localhost:3000/ui`](http://localhost:3000/ui) — manage providers + test playback  
-- `GET /` / `GET /v1` — backend info + providers  
-- `GET /v1/movies/{tmdbId}` — movie sources  
-- `GET /v1/tv/{id}/seasons/{s}/episodes/{e}` — episode sources  
-- `POST /v1/refresh/{id}` — invalidate cached response (OMSS v1.1)
+```env
+OMSS_IMAGE=ghcr.io/YOUR_ORG/YOUR_REPO:1.2.0
+OMSS_PULL_POLICY=always
+```
+
+**Full guide:** [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)  
+**Cut a release:** [docs/RELEASING.md](docs/RELEASING.md) · `npm run release -- 1.2.0`
+
+## Documentation
+
+| Doc | Topic |
+|-----|--------|
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Setup, PRs, provider overview |
+| [docs/PROVIDER_PLUGIN_GUIDE.md](docs/PROVIDER_PLUGIN_GUIDE.md) | Write a provider plugin |
+| [docs/PROVIDERS.md](docs/PROVIDERS.md) | Install / enable / admin |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Host design |
+| [docs/OMSS_SPEC.md](docs/OMSS_SPEC.md) | Protocol summary |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Docker, TLS, `PUBLIC_URL` |
+| [docs/RELEASING.md](docs/RELEASING.md) | Org setup, GHCR, tags |
+| [SUPPORT.md](SUPPORT.md) | Help & sponsorship |
+| [SECURITY.md](SECURITY.md) | Vulnerability reports |
 
 ## Providers
 
-Two install paths (both use official `BaseProvider` — see [docs/PROVIDERS.md](docs/PROVIDERS.md)):
+Enable/disable in [`config/providers.json`](config/providers.json). Bundled packages include NetMirror, 2Embed, Bingr, Filmo, Pikashow, VaultPlayer, VidCore, Videasy, and more under `plugins/`.
 
-1. **Local:** drop modules into `src/providers/`
-2. **Plugin package:** `npm install your-provider` and list it under `plugins` in [`config/providers.json`](config/providers.json)
+**Author a new one:** start from [`plugins/sample-provider-plugin`](plugins/sample-provider-plugin) and follow the [plugin guide](docs/PROVIDER_PLUGIN_GUIDE.md).
 
-**Authoring plugins:** [docs/PROVIDER_PLUGIN_GUIDE.md](docs/PROVIDER_PLUGIN_GUIDE.md)
+## webOS client
 
-Enabled (see [`config/providers.json`](config/providers.json)):
+```bash
+npm run webos:dev
+```
 
-- NetMirror — `@omss-server/netmirror-provider`
-- 2Embed — `@omss-server/twoembed-provider` ([2embed.online](https://www.2embed.online/))
-- Bingr — `@omss-server/bingr-provider` ([bingr.one](https://bingr.one/home))
-- Filmo — `@omss-server/filmo-provider` ([filmo.to](https://filmo.to/), movies only)
-- Pikashow — `@omss-server/pikashow-provider` ([manoda.co](https://manoda.co/))
+Point Settings → Server at your `PUBLIC_URL`. Packaging notes: [`apps/webos/README.md`](apps/webos/README.md).
 
-Disabled after smoke testing (unreachable / dead streams): Peachify, VidSrc, StreamingUnity. Packages remain under `plugins/` if you want to re-enable.
+## Support the project
 
-Admin (not OMSS): `GET /admin/providers`, `POST /admin/providers/:id/enable|disable`, `POST /admin/providers/reload`  
-Sample console: [`public/`](public/) served at `/ui`
+Stars, clear bug reports, docs PRs, and new providers all help. Sponsorship options (once enabled on the org) are listed in [SUPPORT.md](SUPPORT.md).
+
+## License
+
+[MIT](./LICENSE)

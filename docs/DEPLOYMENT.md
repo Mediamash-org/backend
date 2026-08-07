@@ -33,7 +33,21 @@ cp .env.docker.example .env
 
 docker compose up -d --build
 docker compose ps
-curl -fsS "$PUBLIC_URL/"   # or http://127.0.0.1:3000/ if testing locally
+curl -fsS "$PUBLIC_URL/"   # or http://127.0.0.1:${PORT:-3000}/ if testing locally
+```
+
+### Use a GitHub Release image (GHCR)
+
+After the org publishes a tag (see [RELEASING.md](./RELEASING.md)):
+
+```env
+OMSS_IMAGE=ghcr.io/<org>/<repo>:1.2.0
+OMSS_PULL_POLICY=always
+```
+
+```bash
+docker compose pull omss
+docker compose up -d
 ```
 
 Useful checks:

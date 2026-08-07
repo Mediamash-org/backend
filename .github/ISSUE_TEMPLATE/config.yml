@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Deployment help
+    url: https://github.com/YOUR_ORG/YOUR_REPO/blob/main/docs/DEPLOYMENT.md
+    about: PUBLIC_URL, Docker, TLS — read this before filing infra issues
+  - name: Provider authoring guide
+    url: https://github.com/YOUR_ORG/YOUR_REPO/blob/main/docs/PROVIDER_PLUGIN_GUIDE.md
+    about: How to build a BaseProvider plugin
+  - name: Support the project
+    url: https://github.com/YOUR_ORG/YOUR_REPO/blob/main/SUPPORT.md
+    about: Sponsorship and non-code ways to help

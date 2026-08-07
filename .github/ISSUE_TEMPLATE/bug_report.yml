@@ -1,0 +1,45 @@
+name: Bug report
+description: Something broken in the server, proxy, or a bundled provider
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Redact tokens and full proxy `data=` payloads.
+  - type: input
+    id: version
+    attributes:
+      label: Version / image
+      description: Git tag, commit, or `ghcr.io/...` tag
+      placeholder: v1.2.0 or sha-abc1234
+    validations:
+      required: true
+  - type: input
+    id: public-url
+    attributes:
+      label: PUBLIC_URL / how you reach the server
+      placeholder: https://omss.example.com
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. docker compose up -d
+        2. curl /v1/movies/550
+        3. …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs actual
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs (optional)
+      render: shell

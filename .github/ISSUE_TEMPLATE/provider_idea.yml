@@ -1,0 +1,39 @@
+name: Provider idea
+description: Propose or discuss a new OMSS provider plugin
+title: "[provider] "
+labels: ["provider", "enhancement"]
+body:
+  - type: input
+    id: site
+    attributes:
+      label: Site / source name
+      placeholder: example.com
+    validations:
+      required: true
+  - type: dropdown
+    id: media
+    attributes:
+      label: Media types
+      multiple: true
+      options:
+        - Movies
+        - TV
+        - Anime
+        - Live
+        - Subtitles only
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Known APIs, CloudStream ports, blockers, legal concerns
+    validations:
+      required: true
+  - type: checkboxes
+    id: willing
+    attributes:
+      label: Contribution
+      options:
+        - label: I can help implement this as a plugin PR
+        - label: Looking for a maintainer to pick it up
