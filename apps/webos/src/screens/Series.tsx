@@ -116,7 +116,7 @@ export function SeriesScreen({ genre, onNavigate }: SeriesScreenProps) {
           {rails.map((rail, index) => (
             <MediaRow
               key={rail.id}
-              title={rail.title}
+              title={index === 0 && !genre ? 'Top 10 Series' : rail.title}
               items={rail.items}
               rowId={`series-${rail.id}`}
               size="lg"

@@ -116,7 +116,7 @@ export function MoviesScreen({ genre, onNavigate }: MoviesScreenProps) {
           {rails.map((rail, index) => (
             <MediaRow
               key={rail.id}
-              title={rail.title}
+              title={index === 0 && !genre ? 'Top 10 Movies' : rail.title}
               items={rail.items}
               rowId={`movies-${rail.id}`}
               size="lg"

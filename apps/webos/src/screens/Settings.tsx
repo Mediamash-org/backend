@@ -4,6 +4,15 @@ import { useSession } from '../store/SessionContext'
 import type { AppPreferences } from '../store/session'
 import { getAppVersion, isWebOs, platformBack } from '../webos/lifecycle'
 
+type SettingsTab = 'server' | 'playback' | 'profiles' | 'app'
+
+const TABS: Array<{ id: SettingsTab; label: string }> = [
+  { id: 'server', label: 'Server' },
+  { id: 'playback', label: 'Playback' },
+  { id: 'profiles', label: 'Profiles' },
+  { id: 'app', label: 'App' },
+]
+
 const SUB_OPTIONS: Array<{ id: AppPreferences['preferredSubtitle']; label: string }> = [
   { id: 'off', label: 'Off' },
   { id: 'auto', label: 'Auto (English when available)' },
@@ -61,6 +70,7 @@ export function SettingsScreen() {
     resetOnboarding,
   } = useSession()
   const prefs = session.preferences
+  const [tab, setTab] = useState<SettingsTab>('server')
   const [url, setUrl] = useState(session.apiBaseUrl)
   const [newName, setNewName] = useState('')
   const [saved, setSaved] = useState(false)
@@ -80,211 +90,253 @@ export function SettingsScreen() {
         )}
       </header>
 
-      <h2 className="section-label">Server</h2>
-      <label className="settings-label" htmlFor="api-base">
-        Server API address
-      </label>
-      <Focusable
-        id="settings-api-wrap"
-        className="search-box"
-        autoFocus
-        onSelect={() => inputRef.current?.focus()}
-      >
-        <input
-          ref={inputRef}
-          id="api-base"
-          className="search-input"
-          value={url}
-          tabIndex={-1}
-          onChange={(e) => {
-            setUrl(e.target.value)
-            setSaved(false)
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape' || e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-              e.preventDefault()
-              document.getElementById('settings-api-wrap')?.focus()
-            }
-          }}
-        />
-      </Focusable>
-      <div className="hero__actions" style={{ marginTop: 20 }}>
-        <Focusable
-          id="settings-save"
-          className="btn btn--primary"
-          onSelect={() => {
-            setServerUrl(url.trim())
-            setSaved(true)
-            setMessage(null)
-          }}
-        >
-          Save server
-        </Focusable>
-        <Focusable id="settings-switch" className="btn btn--ghost" onSelect={() => signOutProfile()}>
-          Switch profile
-        </Focusable>
-      </div>
-      {saved && <p className="muted">Server address saved.</p>}
-
-      <h2 className="section-label" style={{ marginTop: 40 }}>
-        Playback
-      </h2>
-      <div className="settings-stack">
-        <ToggleRow
-          id="settings-autoplay"
-          label="Autoplay next episode"
-          description="When an episode ends, count down and play the next one."
-          value={prefs.autoplayNext}
-          onToggle={() => updatePreferences({ autoplayNext: !prefs.autoplayNext })}
-        />
-        <ToggleRow
-          id="settings-splash-sound"
-          label="Splash sound"
-          description="Play the MediaMash jingle when the app launches."
-          value={prefs.splashSound}
-          onToggle={() => updatePreferences({ splashSound: !prefs.splashSound })}
-        />
-      </div>
-
-      <h2 className="section-label" style={{ marginTop: 36 }}>
-        Subtitles
-      </h2>
-      <p className="muted" style={{ marginBottom: 12 }}>
-        Preferred language when a title loads (stream tracks still win when present).
-      </p>
-      <div className="settings-stack">
-        {SUB_OPTIONS.map((opt) => (
-          <Focusable
-            key={opt.id}
-            id={`settings-sub-${opt.id}`}
-            className={`settings-choice${prefs.preferredSubtitle === opt.id ? ' is-active' : ''}`}
-            onSelect={() => updatePreferences({ preferredSubtitle: opt.id })}
-          >
-            <span>{opt.label}</span>
-            {prefs.preferredSubtitle === opt.id && <span className="settings-choice__check">✓</span>}
-          </Focusable>
-        ))}
-      </div>
-
-      <h2 className="section-label" style={{ marginTop: 40 }}>
-        Profiles
-      </h2>
-      <div className="profile-grid profile-grid--settings">
-        {session.users.map((user) => (
-          <div key={user.id} className="profile-settings-row">
-            <div className="profile-avatar" style={{ background: user.color }} aria-hidden="true">
-              {user.name.slice(0, 1).toUpperCase()}
-            </div>
-            <span className="profile-card__name">{user.name}</span>
-            {session.users.length > 1 && (
-              <Focusable
-                id={`settings-remove-${user.id}`}
-                className="btn btn--ghost btn--compact"
-                onSelect={() => {
-                  removeUser(user.id)
-                  setMessage(`Removed ${user.name}`)
-                }}
-              >
-                Remove
-              </Focusable>
-            )}
-          </div>
-        ))}
-      </div>
-
-      <label className="settings-label" htmlFor="new-profile" style={{ marginTop: 20 }}>
-        Add another profile
-      </label>
-      <Focusable
-        id="settings-name-wrap"
-        className="search-box"
-        onSelect={() => nameRef.current?.focus()}
-      >
-        <input
-          ref={nameRef}
-          id="new-profile"
-          className="search-input"
-          value={newName}
-          placeholder="Profile name"
-          maxLength={24}
-          tabIndex={-1}
-          onChange={(e) => setNewName(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape' || e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-              e.preventDefault()
-              document.getElementById('settings-name-wrap')?.focus()
-            }
-          }}
-        />
-      </Focusable>
-      <div className="hero__actions" style={{ marginTop: 16 }}>
-        <Focusable
-          id="settings-add-profile"
-          className="btn btn--play"
-          onSelect={() => {
-            if (!newName.trim()) {
-              setMessage('Enter a profile name.')
-              return
-            }
-            addUser(newName.trim())
-            setNewName('')
-            setMessage('Profile added.')
-          }}
-        >
-          Add profile
-        </Focusable>
-      </div>
-      {message && <p className="muted">{message}</p>}
-
-      <h2 className="section-label" style={{ marginTop: 40 }}>
-        Data & app
-      </h2>
-      <div className="settings-stack">
-        {!confirmClear ? (
-          <Focusable
-            id="settings-clear"
-            className="settings-choice"
-            onSelect={() => setConfirmClear(true)}
-          >
-            Clear local data (profiles & preferences)
-          </Focusable>
-        ) : (
-          <div className="hero__actions">
+      <div className="settings-layout">
+        <nav className="settings-tabs" aria-label="Settings sections">
+          {TABS.map((t, i) => (
             <Focusable
-              id="settings-clear-confirm"
-              className="btn btn--primary"
-              autoFocus
+              key={t.id}
+              id={`settings-tab-${t.id}`}
+              className={`settings-tab${tab === t.id ? ' is-active' : ''}`}
+              autoFocus={i === 0}
               onSelect={() => {
-                clearLocalData()
-                resetOnboarding()
+                setTab(t.id)
+                setMessage(null)
                 setConfirmClear(false)
-                setMessage('Local data cleared.')
               }}
             >
-              Confirm clear
+              {t.label}
             </Focusable>
-            <Focusable
-              id="settings-clear-cancel"
-              className="btn btn--ghost"
-              onSelect={() => setConfirmClear(false)}
-            >
-              Cancel
-            </Focusable>
-          </div>
-        )}
-        <Focusable
-          id="settings-exit"
-          className="settings-choice settings-choice--danger"
-          onSelect={() => platformBack()}
-        >
-          {isWebOs() ? 'Exit MediaMash' : 'Close window'}
-        </Focusable>
-      </div>
+          ))}
+        </nav>
 
-      <p className="muted" style={{ marginTop: 40 }}>
-        MediaMash · v{getAppVersion()}
-        {isWebOs() ? ' · webOS' : ''} · catalog and playback come from your server.
-      </p>
+        <div className="settings-panel" role="tabpanel">
+          {tab === 'server' && (
+            <>
+              <h2 className="settings-panel__title">Server</h2>
+              <p className="settings-panel__lead">
+                The TV app loads catalog and streams only from this address.
+              </p>
+              <label className="settings-label" htmlFor="api-base">
+                Server API address
+              </label>
+              <Focusable
+                id="settings-api-wrap"
+                className="search-box"
+                onSelect={() => inputRef.current?.focus()}
+              >
+                <input
+                  ref={inputRef}
+                  id="api-base"
+                  className="search-input"
+                  value={url}
+                  tabIndex={-1}
+                  onChange={(e) => {
+                    setUrl(e.target.value)
+                    setSaved(false)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape' || e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                      e.preventDefault()
+                      document.getElementById('settings-api-wrap')?.focus()
+                    }
+                  }}
+                />
+              </Focusable>
+              <div className="hero__actions" style={{ marginTop: 20 }}>
+                <Focusable
+                  id="settings-save"
+                  className="btn btn--primary"
+                  onSelect={() => {
+                    setServerUrl(url.trim())
+                    setSaved(true)
+                    setMessage(null)
+                  }}
+                >
+                  Save server
+                </Focusable>
+                <Focusable
+                  id="settings-switch"
+                  className="btn btn--ghost"
+                  onSelect={() => signOutProfile()}
+                >
+                  Switch profile
+                </Focusable>
+              </div>
+              {saved && <p className="muted">Server address saved.</p>}
+            </>
+          )}
+
+          {tab === 'playback' && (
+            <>
+              <h2 className="settings-panel__title">Playback</h2>
+              <div className="settings-stack">
+                <ToggleRow
+                  id="settings-autoplay"
+                  label="Autoplay next episode"
+                  description="When an episode ends, count down and play the next one."
+                  value={prefs.autoplayNext}
+                  onToggle={() => updatePreferences({ autoplayNext: !prefs.autoplayNext })}
+                />
+                <ToggleRow
+                  id="settings-splash-sound"
+                  label="Splash sound"
+                  description="Play the MediaMash jingle when the app launches."
+                  value={prefs.splashSound}
+                  onToggle={() => updatePreferences({ splashSound: !prefs.splashSound })}
+                />
+              </div>
+
+              <h3 className="settings-panel__subtitle">Preferred subtitles</h3>
+              <p className="muted" style={{ marginBottom: 12 }}>
+                Applied when a title loads. Stream-embedded tracks still win when present.
+              </p>
+              <div className="settings-stack">
+                {SUB_OPTIONS.map((opt) => (
+                  <Focusable
+                    key={opt.id}
+                    id={`settings-sub-${opt.id}`}
+                    className={`settings-choice${prefs.preferredSubtitle === opt.id ? ' is-active' : ''}`}
+                    onSelect={() => updatePreferences({ preferredSubtitle: opt.id })}
+                  >
+                    <span>{opt.label}</span>
+                    {prefs.preferredSubtitle === opt.id && (
+                      <span className="settings-choice__check">✓</span>
+                    )}
+                  </Focusable>
+                ))}
+              </div>
+            </>
+          )}
+
+          {tab === 'profiles' && (
+            <>
+              <h2 className="settings-panel__title">Profiles</h2>
+              <div className="profile-grid profile-grid--settings">
+                {session.users.map((user) => (
+                  <div key={user.id} className="profile-settings-row">
+                    <div
+                      className="profile-avatar"
+                      style={{ background: user.color }}
+                      aria-hidden="true"
+                    >
+                      {user.name.slice(0, 1).toUpperCase()}
+                    </div>
+                    <span className="profile-card__name">{user.name}</span>
+                    {session.users.length > 1 && (
+                      <Focusable
+                        id={`settings-remove-${user.id}`}
+                        className="btn btn--ghost btn--compact"
+                        onSelect={() => {
+                          removeUser(user.id)
+                          setMessage(`Removed ${user.name}`)
+                        }}
+                      >
+                        Remove
+                      </Focusable>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <label className="settings-label" htmlFor="new-profile" style={{ marginTop: 24 }}>
+                Add another profile
+              </label>
+              <Focusable
+                id="settings-name-wrap"
+                className="search-box"
+                onSelect={() => nameRef.current?.focus()}
+              >
+                <input
+                  ref={nameRef}
+                  id="new-profile"
+                  className="search-input"
+                  value={newName}
+                  placeholder="Profile name"
+                  maxLength={24}
+                  tabIndex={-1}
+                  onChange={(e) => setNewName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape' || e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                      e.preventDefault()
+                      document.getElementById('settings-name-wrap')?.focus()
+                    }
+                  }}
+                />
+              </Focusable>
+              <div className="hero__actions" style={{ marginTop: 16 }}>
+                <Focusable
+                  id="settings-add-profile"
+                  className="btn btn--play"
+                  onSelect={() => {
+                    if (!newName.trim()) {
+                      setMessage('Enter a profile name.')
+                      return
+                    }
+                    addUser(newName.trim())
+                    setNewName('')
+                    setMessage('Profile added.')
+                  }}
+                >
+                  Add profile
+                </Focusable>
+              </div>
+              {message && <p className="muted">{message}</p>}
+            </>
+          )}
+
+          {tab === 'app' && (
+            <>
+              <h2 className="settings-panel__title">App</h2>
+              <p className="settings-panel__lead">
+                MediaMash · v{getAppVersion()}
+                {isWebOs() ? ' · webOS' : ''}
+              </p>
+              <div className="settings-stack">
+                {!confirmClear ? (
+                  <Focusable
+                    id="settings-clear"
+                    className="settings-choice"
+                    onSelect={() => setConfirmClear(true)}
+                  >
+                    Clear local data (profiles & preferences)
+                  </Focusable>
+                ) : (
+                  <div className="hero__actions">
+                    <Focusable
+                      id="settings-clear-confirm"
+                      className="btn btn--primary"
+                      autoFocus
+                      onSelect={() => {
+                        clearLocalData()
+                        resetOnboarding()
+                        setConfirmClear(false)
+                        setMessage('Local data cleared.')
+                      }}
+                    >
+                      Confirm clear
+                    </Focusable>
+                    <Focusable
+                      id="settings-clear-cancel"
+                      className="btn btn--ghost"
+                      onSelect={() => setConfirmClear(false)}
+                    >
+                      Cancel
+                    </Focusable>
+                  </div>
+                )}
+                <Focusable
+                  id="settings-exit"
+                  className="settings-choice settings-choice--danger"
+                  onSelect={() => platformBack()}
+                >
+                  {isWebOs() ? 'Exit MediaMash' : 'Close window'}
+                </Focusable>
+              </div>
+              {message && <p className="muted">{message}</p>}
+            </>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
