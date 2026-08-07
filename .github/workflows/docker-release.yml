@@ -1,12 +1,13 @@
 name: Docker release
 
-# Push a semver tag to build, publish GHCR images, and create a GitHub Release.
-# Local helper: npm run release -- 1.2.0
+# Build multi-arch images → GHCR, then create a GitHub Release.
 #
-# Images (public packages after first publish + visibility set):
-#   ghcr.io/mediamash-org/backend:<tag>
-#   ghcr.io/mediamash-org/backend:latest          (for stable vX.Y.Z only)
-#   ghcr.io/mediamash-org/backend:sha-<short>
+# Triggers:
+#   - git tag push matching vX.Y.Z (or vX.Y.Z-prerelease)
+#   - manual "Run workflow" (optional existing tag, or :edge from default branch)
+#
+# Local: npm run release -- 1.2.0
+# Images: ghcr.io/mediamash-org/backend:<version|latest|edge|sha-…>
 
 on:
   push:
@@ -15,9 +16,13 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Existing git tag to rebuild (e.g. v1.2.0). Leave empty to build the default branch as :edge."
+        description: "Rebuild this git tag (e.g. v1.2.0). Leave empty to publish :edge from the default branch."
         required: false
         type: string
+
+concurrency:
+  group: docker-release-${{ github.workflow }}-${{ inputs.tag || github.ref }}
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -32,24 +37,57 @@ jobs:
   release:
     name: Build & publish
     runs-on: ubuntu-latest
-    timeout-minutes: 45
-
-    outputs:
-      version: ${{ steps.meta.outputs.version }}
-      tags: ${{ steps.meta.outputs.tags }}
-      image: ${{ steps.image.outputs.image }}
+    timeout-minutes: 60
 
     steps:
+      - name: Resolve ref & version
+        id: ver
+        run: |
+          set -euo pipefail
+          EVENT="${{ github.event_name }}"
+          INPUT_TAG="${{ inputs.tag }}"
+
+          if [ "$EVENT" = "workflow_dispatch" ] && [ -n "$INPUT_TAG" ]; then
+            REF="$INPUT_TAG"
+          elif [ "$EVENT" = "push" ] && [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            REF="${{ github.ref_name }}"
+          else
+            REF=""
+          fi
+
+          if [ -n "$REF" ]; then
+            VERSION="${REF#v}"
+            IS_RELEASE=true
+            if [[ "$VERSION" == *-* ]]; then
+              IS_PRERELEASE=true
+            else
+              IS_PRERELEASE=false
+            fi
+          else
+            VERSION=edge
+            IS_RELEASE=false
+            IS_PRERELEASE=false
+            REF="${{ github.sha }}"
+          fi
+
+          {
+            echo "ref=${REF}"
+            echo "version=${VERSION}"
+            echo "is_release=${IS_RELEASE}"
+            echo "is_prerelease=${IS_PRERELEASE}"
+          } >> "$GITHUB_OUTPUT"
+
+          echo "Resolved ref=${REF} version=${VERSION} release=${IS_RELEASE}"
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ inputs.tag || github.ref }}
+          ref: ${{ steps.ver.outputs.ref }}
 
       - name: Image name
         id: image
         run: |
-          # ghcr.io requires lowercase owner/repo
           IMAGE="${REGISTRY}/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')"
           echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
           echo "Publishing ${IMAGE}"
@@ -60,12 +98,14 @@ jobs:
         with:
           images: ${{ steps.image.outputs.image }}
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '-') }}
-            type=raw,value=edge,enable=${{ github.event_name == 'workflow_dispatch' && inputs.tag == '' }}
+            type=raw,value=${{ steps.ver.outputs.version }}
+            type=raw,value=latest,enable=${{ steps.ver.outputs.is_release == 'true' && steps.ver.outputs.is_prerelease == 'false' }}
             type=sha,prefix=sha-,format=short
+          labels: |
+            org.opencontainers.image.title=MediaMash OMSS backend
+            org.opencontainers.image.description=OMSS streaming backend for MediaMash
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.version=${{ steps.ver.outputs.version }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -97,51 +137,71 @@ jobs:
 
       - name: Generate release notes
         id: notes
-        if: startsWith(github.ref, 'refs/tags/v') || inputs.tag != ''
+        if: steps.ver.outputs.is_release == 'true'
         env:
-          TAG: ${{ inputs.tag || github.ref_name }}
+          TAG: v${{ steps.ver.outputs.version }}
           IMAGE: ${{ steps.image.outputs.image }}
+          VERSION: ${{ steps.ver.outputs.version }}
         run: |
+          set -euo pipefail
           {
-            echo "## MediaMash / OMSS ${TAG}"
+            echo "## MediaMash backend \`${TAG}\`"
             echo ""
-            echo "### Container images"
+            echo "### Docker (GHCR)"
             echo ""
             echo "\`\`\`bash"
-            echo "docker pull ${IMAGE}:${TAG#v}"
-            echo "docker pull ${IMAGE}:latest"
+            echo "docker pull ${IMAGE}:${VERSION}"
+            if [ "${{ steps.ver.outputs.is_prerelease }}" != "true" ]; then
+              echo "docker pull ${IMAGE}:latest"
+            fi
             echo "\`\`\`"
             echo ""
-            echo "Or with Compose — set in \`.env\`:"
+            echo "Compose (\`.env\`):"
             echo ""
             echo "\`\`\`env"
-            echo "OMSS_IMAGE=${IMAGE}:${TAG#v}"
+            echo "OMSS_IMAGE=${IMAGE}:${VERSION}"
+            echo "OMSS_PULL_POLICY=always"
             echo "\`\`\`"
             echo ""
-            echo "Docs: [DEPLOYMENT.md](https://github.com/${{ github.repository }}/blob/${TAG}/docs/DEPLOYMENT.md) · [RELEASING.md](https://github.com/${{ github.repository }}/blob/${TAG}/docs/RELEASING.md)"
+            echo "Docs: [DEPLOYMENT](https://github.com/${{ github.repository }}/blob/${TAG}/docs/DEPLOYMENT.md) · [RELEASING](https://github.com/${{ github.repository }}/blob/${TAG}/docs/RELEASING.md)"
             echo ""
             echo "### Changes"
             echo ""
-          } > "$GITHUB_WORKSPACE/release-body.md"
+          } > release-body.md
 
           PREV="$(git describe --tags --abbrev=0 "${TAG}^" 2>/dev/null || true)"
-          if [ -n "$PREV" ]; then
-            echo "Compared to \`${PREV}\`:" >> "$GITHUB_WORKSPACE/release-body.md"
-            echo "" >> "$GITHUB_WORKSPACE/release-body.md"
-            git log --pretty=format:'- %s (%h)' "${PREV}..${TAG}" >> "$GITHUB_WORKSPACE/release-body.md"
+          if [ -n "${PREV}" ]; then
+            echo "Compared to \`${PREV}\`:" >> release-body.md
+            echo "" >> release-body.md
+            git log --pretty=format:'- %s (%h)' "${PREV}..${TAG}" >> release-body.md || true
           else
-            echo "_First tagged release._" >> "$GITHUB_WORKSPACE/release-body.md"
+            echo "_First tagged release._" >> release-body.md
           fi
 
       - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v') || inputs.tag != ''
+        if: steps.ver.outputs.is_release == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ inputs.tag || github.ref_name }}
-          name: ${{ inputs.tag || github.ref_name }}
+          tag_name: v${{ steps.ver.outputs.version }}
+          name: v${{ steps.ver.outputs.version }}
           body_path: release-body.md
           draft: false
-          prerelease: ${{ contains(inputs.tag || github.ref_name, '-') }}
+          prerelease: ${{ steps.ver.outputs.is_prerelease == 'true' }}
           generate_release_notes: true
+          make_latest: ${{ steps.ver.outputs.is_prerelease == 'false' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Summary
+        run: |
+          {
+            echo "## Published"
+            echo ""
+            echo "- **Image:** \`${{ steps.image.outputs.image }}\`"
+            echo "- **Version tag:** \`${{ steps.ver.outputs.version }}\`"
+            echo "- **Digest:** \`${{ steps.build.outputs.digest }}\`"
+            echo ""
+            echo "\`\`\`"
+            echo "${{ steps.meta.outputs.tags }}"
+            echo "\`\`\`"
+          } >> "$GITHUB_STEP_SUMMARY"
