@@ -81,7 +81,8 @@ export function registerFixedProxy(app: FastifyInstance): void {
       const timer = setTimeout(() => controller.abort(), 60_000)
 
       try {
-        const upstream = await fetch(payload.url, {
+        const upstreamUrl = unwrapProxyTargetUrl(payload.url)
+        const upstream = await fetch(upstreamUrl, {
           method: 'GET',
           headers: upstreamHeaders,
           redirect: 'follow',
@@ -112,12 +113,12 @@ export function registerFixedProxy(app: FastifyInstance): void {
           return
         }
 
-        const contentType = upstream.headers.get('content-type') ?? guessMime(payload.url)
+        const contentType = upstream.headers.get('content-type') ?? guessMime(upstreamUrl)
         const headersForRewrite = payload.headers ?? {}
 
-        if (isManifest(contentType, payload.url)) {
+        if (isManifest(contentType, upstreamUrl)) {
           const text = await upstream.text()
-          const rewritten = rewriteManifest(text, payload.url, headersForRewrite, proxyOrigin)
+          const rewritten = rewriteManifest(text, upstreamUrl, headersForRewrite, proxyOrigin)
           const body = Buffer.from(rewritten, 'utf8')
 
           reply.code(upstream.status)
@@ -276,6 +277,21 @@ function guessMime(url: string): string {
   if (/\.vtt(\?|$)/i.test(url)) return 'text/vtt'
   if (/\.srt(\?|$)/i.test(url)) return 'text/plain'
   return 'application/octet-stream'
+}
+
+/**
+ * Some subtitle/stream payloads nest the CDN URL as `https://video?url=<real>`.
+ * That hostname does not resolve; peel the real URL (raw tail — not searchParams,
+ * which truncates at unescaped `&`).
+ */
+export function unwrapProxyTargetUrl(url: string): string {
+  const m = url.match(/^https?:\/\/video\?url=(.+)$/i)
+  if (!m) return url
+  try {
+    return decodeURIComponent(m[1])
+  } catch {
+    return m[1]
+  }
 }
 
 function isManifest(contentType: string, url: string): boolean {

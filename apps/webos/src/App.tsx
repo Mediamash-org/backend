@@ -152,6 +152,7 @@ export default function App() {
             episode={route.kind === 'episode' ? route.episode : undefined}
             streamPath={route.kind === 'episode' ? route.streamPath : undefined}
             onBack={back}
+            onNavigate={navigate}
           />
         )}
       </main>

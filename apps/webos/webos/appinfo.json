@@ -1,10 +1,10 @@
 {
-  "id": "com.omss.webos",
+  "id": "com.mediamash.webos",
   "version": "1.0.0",
-  "vendor": "OMSS",
+  "vendor": "MediaMash",
   "type": "web",
   "main": "index.html",
-  "title": "OMSS Stream",
+  "title": "MediaMash",
   "icon": "icon.png",
   "largeIcon": "largeIcon.png",
   "uiRevision": "2",

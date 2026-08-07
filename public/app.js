@@ -65,7 +65,7 @@
   async function ping() {
     try {
       const info = await api('/')
-      const name = info?.name || 'OMSS'
+      const name = info?.name || 'MediaMash'
       setApiStatus(true, `${name} online`)
     } catch (error) {
       setApiStatus(false, error.message || 'offline')

@@ -56,7 +56,7 @@ export function OnboardingScreen({ mode }: OnboardingScreenProps) {
   const continueServer = async () => {
     const url = serverUrl.trim().replace(/\/$/, '')
     if (!url) {
-      setError('Enter your OMSS server address.')
+      setError('Enter your MediaMash server address.')
       return
     }
     setChecking(true)
@@ -94,13 +94,13 @@ export function OnboardingScreen({ mode }: OnboardingScreenProps) {
   return (
     <div className="onboard">
       <div className="onboard__panel">
-        <p className="onboard__eyebrow">OMSS Stream</p>
+        <p className="onboard__eyebrow">MediaMash</p>
         <h1 className="onboard__title">{title}</h1>
 
         {step === 'server' && (
           <>
             <p className="onboard__copy">
-              Enter the address of your OMSS server. The TV app only talks to this server for
+              Enter the address of your MediaMash server. The TV app only talks to this server for
               catalog and playback.
             </p>
             <Focusable

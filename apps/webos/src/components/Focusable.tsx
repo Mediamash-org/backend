@@ -22,6 +22,7 @@ interface FocusableProps {
   as?: 'button' | 'div'
   /** Prefer focusing this when entering a screen with the remote */
   dataNavZone?: string
+  'aria-label'?: string
 }
 
 export function Focusable({
@@ -36,6 +37,7 @@ export function Focusable({
   autoFocus,
   as = 'div',
   dataNavZone,
+  'aria-label': ariaLabel,
 }: FocusableProps) {
   const ref = useRef<HTMLElement>(null)
 
@@ -73,6 +75,7 @@ export function Focusable({
     tabIndex: disabled ? -1 : tabIndex,
     role,
     'aria-disabled': disabled || undefined,
+    'aria-label': ariaLabel,
     'data-nav-zone': dataNavZone,
     onKeyDown,
     onClick: () => {

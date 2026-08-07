@@ -43,7 +43,7 @@ export async function createOmssHost(options: CreateHostOptions = {}): Promise<O
   }
 
   const server = new OMSSServer({
-    name: env.OMSS_NAME ?? 'OMSS Server',
+    name: env.OMSS_NAME ?? 'MediaMash',
     version: env.OMSS_VERSION ?? '1.1.0',
     host,
     port,

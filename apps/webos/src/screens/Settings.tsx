@@ -139,7 +139,7 @@ export function SettingsScreen() {
       {message && <p className="muted">{message}</p>}
 
       <p className="muted" style={{ marginTop: 40 }}>
-        OMSS Stream · catalog and playback come from your server.
+        MediaMash · catalog and playback come from your server.
       </p>
     </div>
   )

@@ -79,8 +79,7 @@ export function SideNav({ active, onNavigate }: SideNavProps) {
   return (
     <nav className="side-nav" aria-label="Main" data-nav-zone="sidenav">
       <div className="side-nav__brand" aria-hidden="true">
-        <span className="side-nav__logo">N</span>
-        <span className="side-nav__wordmark">OMSS</span>
+        <span className="side-nav__wordmark">MediaMash</span>
       </div>
       <div className="side-nav__items" role="list">
         {ITEMS.map((item) => {

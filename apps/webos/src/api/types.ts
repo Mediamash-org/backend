@@ -129,7 +129,7 @@ export interface StreamSource {
   url: string
   type?: string
   quality?: string
-  audioTracks?: unknown[]
+  audioTracks?: Array<{ label?: string; language?: string }>
   provider?: { id: string; name: string }
 }
 

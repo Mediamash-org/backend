@@ -20,7 +20,7 @@ export function Hero({ item, onPlay, onDetails, autoFocusPlay }: HeroProps) {
       <div className="hero__vignette" />
       <div className="hero__content">
         <div className="hero__badge-row">
-          <span className="hero__brand-tag">OMSS Originals</span>
+          <span className="hero__brand-tag">MediaMash Originals</span>
           <span className="hero__type-tag">{item.type === 'movie' ? 'Film' : 'Series'}</span>
         </div>
         <h1 className="hero__title">{item.title}</h1>
