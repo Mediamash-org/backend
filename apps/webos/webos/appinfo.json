@@ -10,5 +10,7 @@
   "uiRevision": "2",
   "resolution": "1920x1080",
   "bgColor": "#0b0d12",
-  "disableBackHistoryAPI": true
+  "disableBackHistoryAPI": true,
+  "supportsAudioGuidance": false,
+  "requiredPermissions": ["network.public", "network.connection"]
 }

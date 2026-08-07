@@ -1,18 +1,76 @@
 import { useRef, useState } from 'react'
 import { Focusable } from '../components/Focusable'
 import { useSession } from '../store/SessionContext'
+import type { AppPreferences } from '../store/session'
+import { getAppVersion, isWebOs, platformBack } from '../webos/lifecycle'
+
+const SUB_OPTIONS: Array<{ id: AppPreferences['preferredSubtitle']; label: string }> = [
+  { id: 'off', label: 'Off' },
+  { id: 'auto', label: 'Auto (English when available)' },
+  { id: 'en', label: 'English' },
+  { id: 'es', label: 'Spanish' },
+  { id: 'fr', label: 'French' },
+  { id: 'hi', label: 'Hindi' },
+  { id: 'de', label: 'German' },
+  { id: 'ja', label: 'Japanese' },
+  { id: 'ko', label: 'Korean' },
+]
+
+function ToggleRow({
+  id,
+  label,
+  description,
+  value,
+  onToggle,
+}: {
+  id: string
+  label: string
+  description: string
+  value: boolean
+  onToggle: () => void
+}) {
+  return (
+    <Focusable
+      id={id}
+      className={`settings-toggle${value ? ' is-on' : ''}`}
+      onSelect={onToggle}
+      role="switch"
+      aria-label={`${label}: ${value ? 'On' : 'Off'}`}
+    >
+      <div className="settings-toggle__copy">
+        <span className="settings-toggle__label">{label}</span>
+        <span className="settings-toggle__desc">{description}</span>
+      </div>
+      <span className="settings-toggle__switch" aria-hidden="true">
+        <span className="settings-toggle__knob" />
+      </span>
+    </Focusable>
+  )
+}
 
 export function SettingsScreen() {
-  const { session, activeUser, setServerUrl, signOutProfile, addUser, removeUser } = useSession()
+  const {
+    session,
+    activeUser,
+    setServerUrl,
+    signOutProfile,
+    addUser,
+    removeUser,
+    updatePreferences,
+    clearLocalData,
+    resetOnboarding,
+  } = useSession()
+  const prefs = session.preferences
   const [url, setUrl] = useState(session.apiBaseUrl)
   const [newName, setNewName] = useState('')
   const [saved, setSaved] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  const [confirmClear, setConfirmClear] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const nameRef = useRef<HTMLInputElement>(null)
 
   return (
-    <div className="screen">
+    <div className="screen screen--settings">
       <header className="screen__header">
         <h1>Settings</h1>
         {activeUser && (
@@ -67,6 +125,46 @@ export function SettingsScreen() {
         </Focusable>
       </div>
       {saved && <p className="muted">Server address saved.</p>}
+
+      <h2 className="section-label" style={{ marginTop: 40 }}>
+        Playback
+      </h2>
+      <div className="settings-stack">
+        <ToggleRow
+          id="settings-autoplay"
+          label="Autoplay next episode"
+          description="When an episode ends, count down and play the next one."
+          value={prefs.autoplayNext}
+          onToggle={() => updatePreferences({ autoplayNext: !prefs.autoplayNext })}
+        />
+        <ToggleRow
+          id="settings-splash-sound"
+          label="Splash sound"
+          description="Play the MediaMash jingle when the app launches."
+          value={prefs.splashSound}
+          onToggle={() => updatePreferences({ splashSound: !prefs.splashSound })}
+        />
+      </div>
+
+      <h2 className="section-label" style={{ marginTop: 36 }}>
+        Subtitles
+      </h2>
+      <p className="muted" style={{ marginBottom: 12 }}>
+        Preferred language when a title loads (stream tracks still win when present).
+      </p>
+      <div className="settings-stack">
+        {SUB_OPTIONS.map((opt) => (
+          <Focusable
+            key={opt.id}
+            id={`settings-sub-${opt.id}`}
+            className={`settings-choice${prefs.preferredSubtitle === opt.id ? ' is-active' : ''}`}
+            onSelect={() => updatePreferences({ preferredSubtitle: opt.id })}
+          >
+            <span>{opt.label}</span>
+            {prefs.preferredSubtitle === opt.id && <span className="settings-choice__check">✓</span>}
+          </Focusable>
+        ))}
+      </div>
 
       <h2 className="section-label" style={{ marginTop: 40 }}>
         Profiles
@@ -138,8 +236,54 @@ export function SettingsScreen() {
       </div>
       {message && <p className="muted">{message}</p>}
 
+      <h2 className="section-label" style={{ marginTop: 40 }}>
+        Data & app
+      </h2>
+      <div className="settings-stack">
+        {!confirmClear ? (
+          <Focusable
+            id="settings-clear"
+            className="settings-choice"
+            onSelect={() => setConfirmClear(true)}
+          >
+            Clear local data (profiles & preferences)
+          </Focusable>
+        ) : (
+          <div className="hero__actions">
+            <Focusable
+              id="settings-clear-confirm"
+              className="btn btn--primary"
+              autoFocus
+              onSelect={() => {
+                clearLocalData()
+                resetOnboarding()
+                setConfirmClear(false)
+                setMessage('Local data cleared.')
+              }}
+            >
+              Confirm clear
+            </Focusable>
+            <Focusable
+              id="settings-clear-cancel"
+              className="btn btn--ghost"
+              onSelect={() => setConfirmClear(false)}
+            >
+              Cancel
+            </Focusable>
+          </div>
+        )}
+        <Focusable
+          id="settings-exit"
+          className="settings-choice settings-choice--danger"
+          onSelect={() => platformBack()}
+        >
+          {isWebOs() ? 'Exit MediaMash' : 'Close window'}
+        </Focusable>
+      </div>
+
       <p className="muted" style={{ marginTop: 40 }}>
-        MediaMash · catalog and playback come from your server.
+        MediaMash · v{getAppVersion()}
+        {isWebOs() ? ' · webOS' : ''} · catalog and playback come from your server.
       </p>
     </div>
   )

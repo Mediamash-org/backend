@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { ExitDialog } from './components/ExitDialog'
 import { SideNav } from './components/SideNav'
 import {
   directionFromKey,
@@ -21,12 +22,14 @@ import { SeriesDetailsScreen } from './screens/SeriesDetails'
 import { SettingsScreen } from './screens/Settings'
 import { SplashScreen } from './screens/Splash'
 import { useSession } from './store/SessionContext'
+import { platformBack, subscribeLifecycle } from './webos/lifecycle'
 import './styles/tv.css'
 
 export default function App() {
   const { route, navigate, back } = useRouter()
   const { session, activeUser } = useSession()
   const [showSplash, setShowSplash] = useState(true)
+  const [exitOpen, setExitOpen] = useState(false)
   const hideNav = route.name === 'player'
 
   const needsSetup = !session.onboarded || session.users.length === 0
@@ -38,6 +41,22 @@ export default function App() {
   useEffect(() => {
     document.body.classList.add('tv-ui')
     return () => document.body.classList.remove('tv-ui')
+  }, [])
+
+  // webOS lifecycle: pause media when app is hidden; focus on relaunch
+  useEffect(() => {
+    return subscribeLifecycle({
+      onHide: () => {
+        document.querySelectorAll('video, audio').forEach((el) => {
+          const media = el as HTMLMediaElement
+          if (!media.paused) media.pause()
+        })
+      },
+      onRelaunch: () => {
+        setExitOpen(false)
+        window.focus()
+      },
+    })
   }, [])
 
   useEffect(() => {
@@ -52,8 +71,20 @@ export default function App() {
       if (isBackKey(e)) {
         if (inField) return
         e.preventDefault()
-        if (route.name !== 'home') back()
-        else focusFirstIn('.side-nav')
+        e.stopPropagation()
+
+        if (exitOpen) {
+          setExitOpen(false)
+          return
+        }
+
+        if (route.name !== 'home') {
+          back()
+          return
+        }
+
+        // Root screen: confirm then exit (webOS platformBack)
+        setExitOpen(true)
         return
       }
 
@@ -67,6 +98,8 @@ export default function App() {
         }
         return
       }
+
+      if (exitOpen) return
 
       const direction = directionFromKey(e)
       if (direction) {
@@ -94,12 +127,12 @@ export default function App() {
       }
     }
 
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [route.name, back, inGate])
+    window.addEventListener('keydown', onKey, true)
+    return () => window.removeEventListener('keydown', onKey, true)
+  }, [route.name, back, inGate, exitOpen])
 
   useEffect(() => {
-    if (hideNav || inGate) return
+    if (hideNav || inGate || exitOpen) return
     const t = window.setTimeout(() => {
       const active = document.activeElement
       if (active instanceof HTMLElement && active.classList.contains('focusable')) return
@@ -111,7 +144,7 @@ export default function App() {
       preferred?.focus()
     }, 80)
     return () => window.clearTimeout(t)
-  }, [route, hideNav, inGate])
+  }, [route, hideNav, inGate, exitOpen])
 
   if (showSplash) {
     return <SplashScreen onDone={finishSplash} />
@@ -156,6 +189,19 @@ export default function App() {
           />
         )}
       </main>
+
+      {exitOpen && (
+        <ExitDialog
+          onConfirm={() => {
+            setExitOpen(false)
+            platformBack()
+          }}
+          onCancel={() => {
+            setExitOpen(false)
+            focusFirstIn('.side-nav') || focusFirstIn('.app-main')
+          }}
+        />
+      )}
     </div>
   )
 }

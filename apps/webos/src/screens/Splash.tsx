@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import jingleUrl from '../assets/splash-jingle.mp3'
+import { useSession } from '../store/SessionContext'
 
 interface SplashScreenProps {
   onDone: () => void
@@ -13,17 +14,22 @@ const FADE_AT_MS = 4800
 const DONE_AT_MS = 5600
 
 export function SplashScreen({ onDone }: SplashScreenProps) {
+  const { session } = useSession()
+  const playSound = session.preferences.splashSound
   const [phase, setPhase] = useState<'intro' | 'hold' | 'out'>('intro')
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
-    const audio = new Audio(jingleUrl)
-    audioRef.current = audio
-    audio.volume = 0.85
-    audio.preload = 'auto'
-    void audio.play().catch(() => {
-      /* Autoplay may be blocked until a user gesture on some browsers */
-    })
+    let audio: HTMLAudioElement | null = null
+    if (playSound) {
+      audio = new Audio(jingleUrl)
+      audioRef.current = audio
+      audio.volume = 0.85
+      audio.preload = 'auto'
+      void audio.play().catch(() => {
+        /* Autoplay may be blocked until a user gesture on some browsers */
+      })
+    }
 
     const t1 = window.setTimeout(() => setPhase('hold'), HOLD_AT_MS)
     const t2 = window.setTimeout(() => setPhase('out'), FADE_AT_MS)
@@ -32,12 +38,14 @@ export function SplashScreen({ onDone }: SplashScreenProps) {
       window.clearTimeout(t1)
       window.clearTimeout(t2)
       window.clearTimeout(t3)
-      audio.pause()
-      audio.removeAttribute('src')
-      audio.load()
+      if (audio) {
+        audio.pause()
+        audio.removeAttribute('src')
+        audio.load()
+      }
       audioRef.current = null
     }
-  }, [onDone])
+  }, [onDone, playSound])
 
   return (
     <div className={`splash splash--${phase}`} role="presentation" aria-label="MediaMash">

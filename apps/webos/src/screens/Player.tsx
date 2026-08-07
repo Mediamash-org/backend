@@ -25,6 +25,7 @@ import {
   clearTextTrack,
   fetchSubtitleAsVtt,
 } from '../player/subtitles'
+import { useSession } from '../store/SessionContext'
 
 interface PlayerScreenProps {
   kind: 'movie' | 'episode'
@@ -68,6 +69,8 @@ export function PlayerScreen({
   onBack,
   onNavigate,
 }: PlayerScreenProps) {
+  const { session } = useSession()
+  const prefs = session.preferences
   const videoRef = useRef<HTMLVideoElement>(null)
   const hlsRef = useRef<Hls | null>(null)
   const hideTimer = useRef<number | null>(null)
@@ -389,7 +392,7 @@ export function PlayerScreen({
     }
   }, [revealUi, current, paused, menu])
 
-  // Up next countdown
+  // Up next countdown (skip when autoplay is off — countdown stays -1)
   useEffect(() => {
     if (!upNext || upNextCountdown <= 0) return
     const t = window.setTimeout(() => setUpNextCountdown((c) => c - 1), 1000)
@@ -557,10 +560,50 @@ export function PlayerScreen({
         setActiveSubtitleId('off')
       })
   }
+
+  // Apply preferred subtitle once options appear (do not override a manual pick).
+  const prefAppliedRef = useRef(false)
+  useEffect(() => {
+    prefAppliedRef.current = false
+  }, [kind, id, season, episode, sourceIndex])
+
+  useEffect(() => {
+    if (prefAppliedRef.current) return
+    if (subtitleOptions.length <= 1) return
+    if (activeSubtitleId && activeSubtitleId !== 'off') {
+      prefAppliedRef.current = true
+      return
+    }
+    const pref = prefs.preferredSubtitle
+    if (pref === 'off') {
+      prefAppliedRef.current = true
+      return
+    }
+    const match =
+      pref === 'auto'
+        ? subtitleOptions.find(
+            (o) => o.id !== 'off' && (/^en\b/i.test(o.language || '') || /english/i.test(o.label)),
+          )
+        : subtitleOptions.find(
+            (o) =>
+              o.id !== 'off' &&
+              (o.language?.toLowerCase() === pref ||
+                o.label.toLowerCase().startsWith(pref) ||
+                new RegExp(`\\b${pref}\\b`, 'i').test(o.label)),
+          )
+    if (!match) {
+      prefAppliedRef.current = true
+      return
+    }
+    prefAppliedRef.current = true
+    selectSubtitle(match)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional one-shot apply
+  }, [subtitleOptions, prefs.preferredSubtitle, activeSubtitleId])
+
   const onEnded = () => {
     if (kind === 'episode' && nextEpisode) {
       setUpNext(nextEpisode)
-      setUpNextCountdown(8)
+      setUpNextCountdown(prefs.autoplayNext ? 8 : -1)
       setShowUi(true)
     }
   }
@@ -915,7 +958,9 @@ export function PlayerScreen({
       {upNext && (
         <div className="nf-upnext">
           <div className="nf-upnext__card">
-            <p className="nf-upnext__label">Up Next · {upNextCountdown}s</p>
+            <p className="nf-upnext__label">
+              {upNextCountdown > 0 ? `Up Next · ${upNextCountdown}s` : 'Up Next'}
+            </p>
             <h3 className="nf-upnext__title">
               E{upNext.episodeNumber}. {upNext.title}
             </h3>

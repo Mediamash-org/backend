@@ -17,6 +17,7 @@
   --tile-w: 248px;
   --tile-lg-w: 280px;
   --tile-ranked-w: 340px;
+  --font-brand: "Anton", "Bebas Neue", "Arial Narrow", Impact, sans-serif;
   --font-display: "Bebas Neue", "Arial Narrow", sans-serif;
   --font-body: "Outfit", "Trebuchet MS", sans-serif;
 }
@@ -101,11 +102,14 @@ img {
 }
 
 .side-nav__wordmark {
-  font-family: var(--font-display);
-  font-size: 48px;
-  letter-spacing: 0.08em;
+  font-family: var(--font-brand);
+  font-size: 42px;
+  letter-spacing: 0.04em;
   color: var(--accent);
   white-space: nowrap;
+  text-transform: uppercase;
+  font-weight: 400;
+  line-height: 1;
 }
 
 .side-nav__items {
@@ -1664,9 +1668,162 @@ img {
 
 .settings-label {
   display: block;
-  font-size: 18px;
   margin-bottom: 10px;
   color: var(--muted);
+  font-size: 18px;
+}
+
+.screen--settings {
+  padding-bottom: 80px;
+}
+
+.settings-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 720px;
+}
+
+.settings-toggle,
+.settings-choice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 72px;
+  padding: 16px 22px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.settings-toggle__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.settings-toggle__label,
+.settings-choice {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.settings-toggle__desc {
+  color: var(--muted);
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.settings-toggle__switch {
+  position: relative;
+  width: 64px;
+  height: 36px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  transition: background 160ms ease;
+}
+
+.settings-toggle.is-on .settings-toggle__switch {
+  background: var(--accent);
+}
+
+.settings-toggle__knob {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 160ms ease;
+}
+
+.settings-toggle.is-on .settings-toggle__knob {
+  transform: translateX(28px);
+}
+
+.settings-toggle:focus,
+.settings-toggle:focus-visible,
+.settings-choice:focus,
+.settings-choice:focus-visible {
+  background: #fff;
+  color: #111;
+  box-shadow: var(--focus-ring);
+}
+
+.settings-toggle:focus .settings-toggle__desc,
+.settings-choice:focus .settings-toggle__desc {
+  color: #444;
+}
+
+.settings-choice.is-active {
+  outline: 2px solid rgba(229, 9, 20, 0.85);
+}
+
+.settings-choice__check {
+  color: var(--accent);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.settings-choice:focus .settings-choice__check {
+  color: var(--accent);
+}
+
+.settings-choice--danger {
+  color: #ff8a8a;
+}
+
+.btn--compact {
+  min-height: 44px;
+  padding: 8px 16px;
+  font-size: 16px;
+}
+
+.exit-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(8px);
+}
+
+.exit-dialog__card {
+  width: min(560px, 86vw);
+  padding: 40px 44px;
+  border-radius: 16px;
+  background: #141414;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: center;
+}
+
+.exit-dialog__brand {
+  margin: 0 0 12px;
+  font-family: var(--font-brand);
+  font-size: 28px;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+}
+
+.exit-dialog__title {
+  margin: 0 0 10px;
+  font-size: 36px;
+}
+
+.exit-dialog__copy {
+  margin: 0 0 28px;
+  color: var(--muted);
+  font-size: 18px;
+}
+
+.exit-dialog__actions {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
 }
 
 @media (max-width: 1100px) {
@@ -1963,12 +2120,13 @@ img {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: 0.02em;
-  font-family: var(--font-display);
-  font-size: clamp(72px, 14vw, 168px);
+  gap: 0.015em;
+  font-family: var(--font-brand);
+  font-size: clamp(80px, 15vw, 180px);
   font-weight: 400;
-  letter-spacing: 0.08em;
-  line-height: 1;
+  letter-spacing: 0.02em;
+  line-height: 0.92;
+  text-transform: uppercase;
   color: #e50914;
   text-shadow:
     0 0 40px rgba(229, 9, 20, 0.45),

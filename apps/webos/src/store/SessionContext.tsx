@@ -8,9 +8,11 @@ import {
 } from 'react'
 import { setApiBaseUrl } from '../api/client'
 import {
+  createDefaultSession,
   createUser,
   loadSession,
   saveSession,
+  type AppPreferences,
   type SessionState,
   type UserProfile,
 } from './session'
@@ -25,6 +27,8 @@ interface SessionContextValue {
   removeUser: (id: string) => void
   signOutProfile: () => void
   resetOnboarding: () => void
+  updatePreferences: (patch: Partial<AppPreferences>) => void
+  clearLocalData: () => void
 }
 
 const SessionContext = createContext<SessionContextValue | null>(null)
@@ -57,9 +61,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         apiBaseUrl: serverUrl.replace(/\/$/, ''),
         users: [user],
         activeUserId: user.id,
+        preferences: session.preferences,
       })
     },
-    [commit],
+    [commit, session.preferences],
   )
 
   const addUser = useCallback(
@@ -106,6 +111,22 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     })
   }, [commit, session])
 
+  const updatePreferences = useCallback(
+    (patch: Partial<AppPreferences>) => {
+      commit({
+        ...session,
+        preferences: { ...session.preferences, ...patch },
+      })
+    },
+    [commit, session],
+  )
+
+  const clearLocalData = useCallback(() => {
+    const fresh = createDefaultSession()
+    fresh.apiBaseUrl = session.apiBaseUrl
+    commit(fresh)
+  }, [commit, session.apiBaseUrl])
+
   const activeUser = useMemo(
     () => session.users.find((u) => u.id === session.activeUserId) ?? null,
     [session.activeUserId, session.users],
@@ -122,6 +143,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       removeUser,
       signOutProfile,
       resetOnboarding,
+      updatePreferences,
+      clearLocalData,
     }),
     [
       session,
@@ -133,6 +156,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       removeUser,
       signOutProfile,
       resetOnboarding,
+      updatePreferences,
+      clearLocalData,
     ],
   )
 
