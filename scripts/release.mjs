@@ -100,5 +100,5 @@ console.log(`
 Done.
 - Commit + tag ${tag} pushed to origin
 - Watch: GitHub → Actions → "Docker release"
-- Image: ghcr.io/<org>/<repo>:${version}
+- Image: ghcr.io/mediamash-org/backend:${version}
 `)

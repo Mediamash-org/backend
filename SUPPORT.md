@@ -17,7 +17,7 @@ Community chat (optional): add Discord/Matrix links here once the org creates th
 ```md
 <!-- Example once ready:
 - Discord: https://discord.gg/…
-- Discussions: https://github.com/<ORG>/<REPO>/discussions
+- Discussions: https://github.com/Mediamash-org/backend/discussions
 -->
 ```
 
@@ -36,7 +36,7 @@ Community chat (optional): add Discord/Matrix links here once the org creates th
 
 ```md
 <!--
-[![GitHub Sponsors](https://img.shields.io/github/sponsors/<ORG>)](https://github.com/sponsors/<ORG>)
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/Mediamash-org)](https://github.com/sponsors/Mediamash-org)
 -->
 ```
 

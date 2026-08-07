@@ -4,9 +4,9 @@ name: Docker release
 # Local helper: npm run release -- 1.2.0
 #
 # Images (public packages after first publish + visibility set):
-#   ghcr.io/<org>/<repo>:<tag>
-#   ghcr.io/<org>/<repo>:latest          (for stable vX.Y.Z only)
-#   ghcr.io/<org>/<repo>:sha-<short>
+#   ghcr.io/mediamash-org/backend:<tag>
+#   ghcr.io/mediamash-org/backend:latest          (for stable vX.Y.Z only)
+#   ghcr.io/mediamash-org/backend:sha-<short>
 
 on:
   push:

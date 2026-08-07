@@ -11,8 +11,8 @@ Be respectful. See [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
 **Requirements:** Node.js 20.6+, npm 10+, Git. Docker optional (see [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)).
 
 ```bash
-git clone https://github.com/<YOUR_ORG>/<YOUR_REPO>.git
-cd <YOUR_REPO>
+git clone https://github.com/Mediamash-org/backend.git
+cd backend
 cp .env.example .env
 # set TMDB_API_KEY=...
 

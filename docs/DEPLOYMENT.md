@@ -23,9 +23,8 @@ Recommended: 1 vCPU, 1–2 GB RAM, SSD.
 ## Quick start
 
 ```bash
-git clone <your-repo-url> omss
-cd omss
-
+git clone https://github.com/Mediamash-org/backend.git
+cd backend
 cp .env.docker.example .env
 # Edit .env — at minimum set:
 #   TMDB_API_KEY=...
@@ -41,7 +40,7 @@ curl -fsS "$PUBLIC_URL/"   # or http://127.0.0.1:${PORT:-3000}/ if testing local
 After the org publishes a tag (see [RELEASING.md](./RELEASING.md)):
 
 ```env
-OMSS_IMAGE=ghcr.io/<org>/<repo>:1.2.0
+OMSS_IMAGE=ghcr.io/mediamash-org/backend:1.2.0
 OMSS_PULL_POLICY=always
 ```
 

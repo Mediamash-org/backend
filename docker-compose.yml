@@ -39,9 +39,9 @@ services:
       context: .
       dockerfile: Dockerfile
     # Prefer a released image in production, e.g.:
-    #   OMSS_IMAGE=ghcr.io/<org>/<repo>:1.2.0
+    #   OMSS_IMAGE=ghcr.io/mediamash-org/backend:1.2.0
     # Leave unset (or comment image) to build locally from this Dockerfile.
-    image: ${OMSS_IMAGE:-mediamash/omss-server:latest}
+    image: ${OMSS_IMAGE:-ghcr.io/mediamash-org/backend:latest}
     restart: unless-stopped
     pull_policy: ${OMSS_PULL_POLICY:-missing}
     depends_on:

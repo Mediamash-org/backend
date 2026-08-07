@@ -4,10 +4,10 @@ Self-hosted [OMSS](https://github.com/omss-spec)-compatible streaming backend fo
 
 Built on [`@omss/framework`](https://github.com/omss-spec/framework).
 
-[![CI](https://github.com/YOUR_ORG/YOUR_REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_ORG/YOUR_REPO/actions/workflows/ci.yml)
-[![Docker release](https://github.com/YOUR_ORG/YOUR_REPO/actions/workflows/docker-release.yml/badge.svg)](https://github.com/YOUR_ORG/YOUR_REPO/actions/workflows/docker-release.yml)
+**Org:** [Mediamash-org](https://github.com/Mediamash-org) · **Repo:** [Mediamash-org/backend](https://github.com/Mediamash-org/backend)
 
-> After you create the GitHub organization and push this repo, replace `YOUR_ORG` / `YOUR_REPO` in the badges and docs (see [docs/RELEASING.md](docs/RELEASING.md)).
+[![CI](https://github.com/Mediamash-org/backend/actions/workflows/ci.yml/badge.svg)](https://github.com/Mediamash-org/backend/actions/workflows/ci.yml)
+[![Docker release](https://github.com/Mediamash-org/backend/actions/workflows/docker-release.yml/badge.svg)](https://github.com/Mediamash-org/backend/actions/workflows/docker-release.yml)
 
 ## Features
 
@@ -37,7 +37,7 @@ docker compose up -d --build
 Or pull a released image after the first GitHub Release:
 
 ```env
-OMSS_IMAGE=ghcr.io/YOUR_ORG/YOUR_REPO:1.2.0
+OMSS_IMAGE=ghcr.io/mediamash-org/backend:1.2.0
 OMSS_PULL_POLICY=always
 ```
 

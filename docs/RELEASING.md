@@ -1,30 +1,33 @@
 # Releasing
 
-How maintainers publish versioned Docker images and GitHub Releases for this repository.
+How maintainers publish versioned Docker images and GitHub Releases for **[Mediamash-org/backend](https://github.com/Mediamash-org/backend)**.
 
 ## What “a release” does
 
 1. You run `npm run release -- <semver>` (or push a `v*` tag yourself).
 2. Workflow [`.github/workflows/docker-release.yml`](../.github/workflows/docker-release.yml) runs on the tag.
 3. It builds **linux/amd64** and **linux/arm64** images and pushes them to **GitHub Container Registry**:
-   - `ghcr.io/<org>/<repo>:<version>`
-   - `ghcr.io/<org>/<repo>:<major>.<minor>`
-   - `ghcr.io/<org>/<repo>:<major>`
-   - `ghcr.io/<org>/<repo>:latest` (stable tags only; not `v1.2.0-rc.1`)
-   - `ghcr.io/<org>/<repo>:sha-<short>`
+   - `ghcr.io/mediamash-org/backend:<version>`
+   - `ghcr.io/mediamash-org/backend:<major>.<minor>`
+   - `ghcr.io/mediamash-org/backend:<major>`
+   - `ghcr.io/mediamash-org/backend:latest` (stable tags only; not `v1.2.0-rc.1`)
+   - `ghcr.io/mediamash-org/backend:sha-<short>`
 4. A **GitHub Release** is created with pull instructions and the commit log since the previous tag.
 
 CI on every PR: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).
 
 ## One-time org / repo setup
 
-Replace `<ORG>` / `<REPO>` with your GitHub organization and repository names.
+### 1. Create the repository under the org
 
-### 1. Create the organization and repo
-
-1. GitHub → **New organization**.
-2. Create repository `<REPO>` (this codebase).
+1. Open [Mediamash-org](https://github.com/Mediamash-org).
+2. Create repository **`backend`** (this codebase) — public or private as you prefer.
 3. Push `main` (or `master`).
+
+```bash
+git remote add origin https://github.com/Mediamash-org/backend.git
+git push -u origin main
+```
 
 ### 2. Workflow permissions
 
@@ -38,14 +41,14 @@ Replace `<ORG>` / `<REPO>` with your GitHub organization and repository names.
 After the first successful release:
 
 1. GitHub profile/org → **Packages**.
-2. Open `ghcr.io/<org>/<repo>`.
+2. Open `ghcr.io/mediamash-org/backend`.
 3. **Package settings → Change visibility → Public**.
 
 Until then, consumers need a PAT:
 
 ```bash
 echo YOUR_GHCR_PAT | docker login ghcr.io -u USERNAME --password-stdin
-docker pull ghcr.io/<org>/<repo>:latest
+docker pull ghcr.io/mediamash-org/backend:latest
 ```
 
 ### 4. Optional: Actions secrets
@@ -92,7 +95,7 @@ Watch **Actions → Docker release**. When green, open the new **Release** on Gi
 `.env`:
 
 ```env
-OMSS_IMAGE=ghcr.io/<org>/<repo>:1.2.0
+OMSS_IMAGE=ghcr.io/mediamash-org/backend:1.2.0
 OMSS_PULL_POLICY=always
 PUBLIC_URL=https://omss.example.com
 TMDB_API_KEY=...
