@@ -16,7 +16,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "format": "prettier --write src",
-    "postinstall": "npm run build:plugins"
+    "postinstall": "npm run build:plugins",
+    "webos:dev": "npm run dev --prefix apps/webos",
+    "webos:build": "npm run build --prefix apps/webos",
+    "webos:package": "npm run package --prefix apps/webos"
   },
   "dependencies": {
     "@omss-server/bingr-provider": "file:plugins/bingr-provider",

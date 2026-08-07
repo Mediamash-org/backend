@@ -112,9 +112,12 @@ function registerOmssAlignments(app: FastifyInstance, manager: ProviderPluginMan
     },
   )
 
-  app.addHook('onSend', async (request, reply, payload) => {
+  // Prefer sync returns when possible so reply.sent races are less likely on
+  // routes that call reply.send() from async handlers/preHandlers.
+  app.addHook('onSend', (request, reply, payload, done) => {
     if (reply.statusCode !== 200 || typeof payload !== 'string') {
-      return payload
+      done(null, payload)
+      return
     }
 
     const path = request.url.split('?')[0]
@@ -124,64 +127,77 @@ function registerOmssAlignments(app: FastifyInstance, manager: ProviderPluginMan
       (path.startsWith('/v1/tv/') && path.includes('/episodes/'))
 
     if (!isHome && !isSources) {
-      return payload
+      done(null, payload)
+      return
     }
 
+    let body: Record<string, unknown>
     try {
-      const body = JSON.parse(payload) as Record<string, unknown>
-
-      if (isHome) {
-        const providers = manager
-          .list()
-          .filter((p) => p.enabled)
-          .map((p) => ({
-            id: p.id,
-            name: p.name,
-            capabilities: p.capabilities,
-          }))
-
-        body.media = body.media ?? { movies: '*', tv: '*' }
-        body.providers = providers
-
-        if (body.status === 'offline' || body.status === 'maintenance') {
-          body.status = 'down'
-        }
-
-        const endpoints = (body.endpoints ?? {}) as Record<string, string>
-        endpoints.movie = endpoints.movie ?? '/v1/movies/{id}'
-        endpoints.tv = endpoints.tv ?? '/v1/tv/{id}/seasons/{s}/episodes/{e}'
-        body.endpoints = endpoints
-      }
-
-      if (isSources && typeof body.responseId === 'string' && body.id === undefined) {
-        body.id = body.responseId
-      }
-
-      if (isSources) {
-        const sources = Array.isArray(body.sources) ? body.sources : []
-        if (sources.length) {
-          const origin = `${request.protocol}://${request.headers.host || 'localhost'}`
-          const filtered = await filterPlayableSources(
-            sources,
-            origin,
-            Number(process.env.SOURCE_PROBE_TIMEOUT_MS ?? 12_000),
-            Number(process.env.SOURCE_PROBE_CACHE_TTL_MS ?? 180_000),
-          )
-          body.sources = filtered.sources
-          if (filtered.removed > 0) {
-            body.diagnostics = addPlayableFilterDiagnostic(
-              Array.isArray(body.diagnostics) ? body.diagnostics : [],
-              filtered.removed,
-              'UNPLAYABLE_SOURCE_FILTERED',
-              'Filtered',
-            )
-          }
-        }
-      }
-
-      return JSON.stringify(body)
+      body = JSON.parse(payload) as Record<string, unknown>
     } catch {
-      return payload
+      done(null, payload)
+      return
     }
+
+    if (isHome) {
+      const providers = manager
+        .list()
+        .filter((p) => p.enabled)
+        .map((p) => ({
+          id: p.id,
+          name: p.name,
+          capabilities: p.capabilities,
+        }))
+
+      body.media = body.media ?? { movies: '*', tv: '*' }
+      body.providers = providers
+
+      if (body.status === 'offline' || body.status === 'maintenance') {
+        body.status = 'down'
+      }
+
+      const endpoints = (body.endpoints ?? {}) as Record<string, string>
+      endpoints.movie = endpoints.movie ?? '/v1/movies/{id}'
+      endpoints.tv = endpoints.tv ?? '/v1/tv/{id}/seasons/{s}/episodes/{e}'
+      body.endpoints = endpoints
+    }
+
+    if (isSources && typeof body.responseId === 'string' && body.id === undefined) {
+      body.id = body.responseId
+    }
+
+    if (!isSources) {
+      done(null, JSON.stringify(body))
+      return
+    }
+
+    const sources = Array.isArray(body.sources) ? body.sources : []
+    if (!sources.length) {
+      done(null, JSON.stringify(body))
+      return
+    }
+
+    const origin = `${request.protocol}://${request.headers.host || 'localhost'}`
+    filterPlayableSources(
+      sources,
+      origin,
+      Number(process.env.SOURCE_PROBE_TIMEOUT_MS ?? 12_000),
+      Number(process.env.SOURCE_PROBE_CACHE_TTL_MS ?? 180_000),
+    )
+      .then((filtered) => {
+        body.sources = filtered.sources
+        if (filtered.removed > 0) {
+          body.diagnostics = addPlayableFilterDiagnostic(
+            Array.isArray(body.diagnostics) ? body.diagnostics : [],
+            filtered.removed,
+            'UNPLAYABLE_SOURCE_FILTERED',
+            'Filtered',
+          )
+        }
+        done(null, JSON.stringify(body))
+      })
+      .catch(() => {
+        done(null, payload)
+      })
   })
 }

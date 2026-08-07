@@ -37,19 +37,15 @@ interface TmdbGenreList {
 
 function sendError(reply: FastifyReply, err: unknown) {
   if (err instanceof TmdbError) {
-    const status = err.status === 404 ? 404 : err.status >= 400 && err.status < 500 ? 502 : 502
-    return reply.code(status === 404 ? 404 : 502).send({
+    return reply.code(err.status === 404 ? 404 : 502).send({
       error: {
         code: err.status === 404 ? 'NOT_FOUND' : err.code,
         message: err.status === 404 ? 'Content not found' : 'Unable to load content from metadata service',
       },
     })
   }
-  const message = err instanceof Error ? err.message : 'Unexpected error'
   return reply.code(500).send({
     error: { code: 'INTERNAL_ERROR', message: 'Unable to load content' },
-    // keep message out of user-facing body except for logging side
-    _debug: process.env.INTERNAL_DEBUG === 'true' ? message : undefined,
   })
 }
 

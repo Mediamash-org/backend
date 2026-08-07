@@ -11,6 +11,12 @@ type ProxyPayload = { url?: string; headers?: Record<string, string> }
  * This preHandler owns GET /v1/proxy and forwards a single Range header.
  * It also rewrites HLS/DASH manifests so relative segment/variant URIs keep
  * going through /v1/proxy (otherwise hls.js resolves them as /v1/*.m3u8 → 404).
+ *
+ * Fastify 5 only marks `reply.sent` after the socket ends (or hijack). With an
+ * async `onSend` hook, returning from this preHandler too early lets the
+ * framework `/v1/proxy` route run as well → double `writeHead` →
+ * ERR_HTTP_HEADERS_SENT and a process crash. `sendFromPreHandler` holds the
+ * hook until the response finishes so the route is skipped.
  */
 export function registerFixedProxy(app: FastifyInstance): void {
   app.addHook(
@@ -23,36 +29,42 @@ export function registerFixedProxy(app: FastifyInstance): void {
 
       const encoded = request.query.data
       if (!encoded) {
-        return reply.code(400).send({
+        reply.code(400)
+        await sendFromPreHandler(reply, {
           error: {
             code: 'MISSING_PARAMETER',
             message: 'Missing required parameter: data',
           },
           traceId: request.id,
         })
+        return
       }
 
       let payload: ProxyPayload
       try {
         payload = parseProxyData(encoded)
       } catch {
-        return reply.code(400).send({
+        reply.code(400)
+        await sendFromPreHandler(reply, {
           error: {
             code: 'INVALID_PARAMETER',
             message: 'Invalid data parameter format',
           },
           traceId: request.id,
         })
+        return
       }
 
       if (!payload.url) {
-        return reply.code(400).send({
+        reply.code(400)
+        await sendFromPreHandler(reply, {
           error: {
             code: 'INVALID_PARAMETER',
             message: 'Missing url field in proxy data',
           },
           traceId: request.id,
         })
+        return
       }
 
       const upstreamHeaders: Record<string, string> = { ...(payload.headers ?? {}) }
@@ -77,23 +89,27 @@ export function registerFixedProxy(app: FastifyInstance): void {
         })
 
         if (upstream.status >= 500) {
-          return reply.code(502).send({
+          reply.code(502)
+          await sendFromPreHandler(reply, {
             error: {
               code: 'INTERNAL_ERROR',
               message: `Upstream returned ${upstream.status}`,
             },
             traceId: request.id,
           })
+          return
         }
 
         if (!upstream.body) {
-          return reply.code(502).send({
+          reply.code(502)
+          await sendFromPreHandler(reply, {
             error: {
               code: 'INTERNAL_ERROR',
               message: 'Upstream returned empty body',
             },
             traceId: request.id,
           })
+          return
         }
 
         const contentType = upstream.headers.get('content-type') ?? guessMime(payload.url)
@@ -113,7 +129,8 @@ export function registerFixedProxy(app: FastifyInstance): void {
           reply.header('Cache-Control', 'no-store, no-cache, must-revalidate')
           reply.header('Pragma', 'no-cache')
           reply.header('Content-Length', String(body.length))
-          return reply.send(body)
+          await sendFromPreHandler(reply, body)
+          return
         }
 
         reply.code(upstream.status)
@@ -145,15 +162,21 @@ export function registerFixedProxy(app: FastifyInstance): void {
         if (etag) reply.header('ETag', etag)
 
         const nodeStream = Readable.fromWeb(upstream.body as import('stream/web').ReadableStream)
-        return reply.send(nodeStream)
+        bindProxyStreamLifetime(request, nodeStream)
+        await sendFromPreHandler(reply, nodeStream)
       } catch (error) {
+        if (reply.sent || reply.raw.headersSent || reply.raw.writableEnded) {
+          request.log.warn({ err: error }, 'proxy failed after response started')
+          return
+        }
         const message = error instanceof Error ? error.message : 'Unknown error'
         const code =
           error instanceof Error && 'cause' in error
             ? String((error as Error & { cause?: { code?: unknown } }).cause?.code ?? '')
             : ''
         const detail = code ? ` (${code})` : ''
-        return reply.code(500).send({
+        reply.code(500)
+        await sendFromPreHandler(reply, {
           error: {
             code: 'INTERNAL_ERROR',
             message: `Failed to proxy request: ${message}${detail}`,
@@ -165,6 +188,57 @@ export function registerFixedProxy(app: FastifyInstance): void {
       }
     },
   )
+}
+
+/**
+ * Keep a preHandler pending until Fastify finishes writing the response.
+ * Without this, Fastify 5 still reports `reply.sent === false` while async
+ * onSend hooks run, and the real route handler executes a second send.
+ */
+export function sendFromPreHandler(reply: FastifyReply, payload: unknown): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const { raw } = reply
+    let settled = false
+
+    const settle = () => {
+      if (settled) return
+      settled = true
+      raw.removeListener('finish', settle)
+      raw.removeListener('close', settle)
+      resolve()
+    }
+
+    raw.once('finish', settle)
+    raw.once('close', settle)
+
+    try {
+      reply.send(payload)
+    } catch (err) {
+      raw.removeListener('finish', settle)
+      raw.removeListener('close', settle)
+      reject(err)
+      return
+    }
+
+    if (reply.sent || raw.writableEnded) {
+      settle()
+    }
+  })
+}
+
+function bindProxyStreamLifetime(request: FastifyRequest, stream: Readable): void {
+  const abort = () => {
+    if (!stream.destroyed) stream.destroy()
+  }
+  request.raw.once('close', abort)
+  stream.once('close', () => {
+    request.raw.removeListener('close', abort)
+  })
+  stream.on('error', (err) => {
+    // Client aborts are normal for HLS; avoid unhandled stream errors.
+    if ((err as NodeJS.ErrnoException).code === 'ERR_STREAM_PREMATURE_CLOSE') return
+    request.log.warn({ err }, 'proxy upstream stream error')
+  })
 }
 
 function requestOrigin(request: FastifyRequest): string {
