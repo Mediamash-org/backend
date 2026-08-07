@@ -1,0 +1,95 @@
+# MediaMash / OMSS — production stack
+#
+# 1. cp .env.docker.example .env
+# 2. Set TMDB_API_KEY and PUBLIC_URL (your public HTTPS origin)
+# 3. docker compose up -d --build
+#
+# Docs: docs/DEPLOYMENT.md
+
+name: mediamash
+
+services:
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --maxmemory
+      - 256mb
+      - --maxmemory-policy
+      - allkeys-lru
+    volumes:
+      - redis-data:/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    # Do not publish Redis to the host in production.
+    # ports:
+    #   - "6379:6379"
+
+  omss:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mediamash/omss-server:latest
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+      CACHE_TYPE: redis
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      # Never skip playability probes in production unless you know why.
+      INTERNAL_DEBUG: "false"
+    ports:
+      - "${OMSS_HOST_PORT:-3000}:3000"
+    volumes:
+      # Hot-swap providers without rebuilding (optional).
+      - ./config/providers.json:/app/config/providers.json:ro
+    networks:
+      - internal
+      - edge
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:3000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 45s
+    # Extra headroom for concurrent provider scrapes + HLS proxy.
+    # Honored by Compose V2 (non-Swarm) for memory caps.
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+networks:
+  # App ↔ Redis only
+  internal:
+    driver: bridge
+    internal: true
+  # Published ports / reverse-proxy peers
+  edge:
+    driver: bridge
+
+volumes:
+  redis-data:

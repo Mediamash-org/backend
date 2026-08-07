@@ -1,0 +1,39 @@
+# Git / IDE
+.git
+.github
+.idea
+.vscode
+**/.DS_Store
+Thumbs.db
+
+# Env & secrets (inject at runtime)
+.env
+.env.*
+!.env.docker.example
+!.env.example
+
+# Dependencies & build outputs (rebuilt in image)
+node_modules
+**/node_modules
+dist
+plugins/*/dist
+plugins/*/node_modules
+coverage
+tmp
+*.log
+
+# Docs & non-runtime app trees
+docs
+agent-transcripts
+apps/webos/node_modules
+apps/webos/dist
+apps/raw
+scripts
+tests
+**/*.md
+!public/README.md
+
+# Local packaging artifacts
+*.ipk
+*.tgz
+*.tar.gz

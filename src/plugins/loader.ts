@@ -11,6 +11,14 @@ import type {
 
 const DEFAULT_CONFIG_PATH = 'config/providers.json'
 
+/** In production images only `dist/` ships; map legacy config paths. */
+function resolveLocalProviderDir(dir: string): string {
+  if (process.env.NODE_ENV !== 'production') return dir
+  const normalized = dir.replace(/\\/g, '/').replace(/^\.\//, '')
+  if (normalized === 'src/providers') return './dist/providers'
+  return dir
+}
+
 export async function loadProvidersConfig(
   configPath = process.env.OMSS_PROVIDERS_CONFIG ?? DEFAULT_CONFIG_PATH,
 ): Promise<ProvidersConfig> {
@@ -136,8 +144,9 @@ export async function loadProviders(
     [process.env.NODE_ENV === 'production' ? './dist/providers' : './src/providers']
 
   for (const dir of localDirs) {
+    const resolvedDir = resolveLocalProviderDir(dir)
     const before = new Set(registry.listProviders())
-    await registry.discoverProviders(dir)
+    await registry.discoverProviders(resolvedDir)
     for (const id of registry.listProviders()) {
       if (!before.has(id)) {
         loaded.push({ id, source: 'local' })

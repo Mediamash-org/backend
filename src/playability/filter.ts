@@ -21,12 +21,39 @@ const DEFAULT_PROBE_UA =
 
 const playabilityCache = new Map<string, { expiresAt: number; result: ProbeResult }>()
 
+function probesDisabled(env: NodeJS.ProcessEnv = process.env): boolean {
+  if (env.NODE_ENV === 'test') return true
+  const flag = (env.INTERNAL_DEBUG || '').trim().toLowerCase()
+  return flag === '1' || flag === 'true' || flag === 'yes'
+}
+
+/** Reach this process directly when PUBLIC_URL is a public hostname that may not hairpin. */
+function localLoopbackOrigin(env: NodeJS.ProcessEnv = process.env): string {
+  const port = Number(env.PORT ?? 3000)
+  return `http://127.0.0.1:${port}`
+}
+
+function probeFetchUrl(fullUrl: string, fallbackOrigin: string): string {
+  const publicUrl = (process.env.PUBLIC_URL || '').replace(/\/$/, '')
+  if (publicUrl && fullUrl.startsWith(publicUrl)) {
+    return `${localLoopbackOrigin()}${fullUrl.slice(publicUrl.length)}`
+  }
+  if (fullUrl.startsWith('/')) {
+    return new URL(fullUrl, fallbackOrigin.startsWith('http') ? fallbackOrigin : localLoopbackOrigin()).toString()
+  }
+  return fullUrl
+}
+
 export async function filterPlayableSources(
   sources: OmssSource[],
   origin: string,
   timeoutMs: number,
   cacheTtlMs: number,
 ): Promise<{ sources: OmssSource[]; removed: number }> {
+  if (probesDisabled()) {
+    return { sources, removed: 0 }
+  }
+
   const checks = await Promise.all(
     sources.map(async (source) => ({
       source,
@@ -81,11 +108,12 @@ async function probePlayableSource(
   if (cached && cached.expiresAt > now) return cached.result
 
   const full = rawUrl.startsWith('http') ? rawUrl : new URL(rawUrl, origin).toString()
+  const fetchUrl = probeFetchUrl(full, origin)
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeoutMs)
 
   try {
-    const response = await fetch(full, {
+    const response = await fetch(fetchUrl, {
       method: 'GET',
       redirect: 'follow',
       signal: controller.signal,

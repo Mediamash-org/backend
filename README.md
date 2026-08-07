@@ -16,6 +16,15 @@ npm run dev
 
 Server: `http://localhost:3000`
 
+## Production (Docker)
+
+```bash
+cp .env.docker.example .env   # set TMDB_API_KEY + PUBLIC_URL
+docker compose up -d --build
+```
+
+Full TLS, Redis, reverse-proxy, and ops guide: **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**
+
 - **Console UI:** [`http://localhost:3000/ui`](http://localhost:3000/ui) — manage providers + test playback  
 - `GET /` / `GET /v1` — backend info + providers  
 - `GET /v1/movies/{tmdbId}` — movie sources  
