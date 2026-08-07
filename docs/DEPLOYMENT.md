@@ -78,7 +78,8 @@ Copy from [`.env.docker.example`](../.env.docker.example). Compose always inject
 |----------|----------|--------|
 | `TMDB_API_KEY` | yes | Catalog + ID validation |
 | `PUBLIC_URL` | yes | Public origin for proxy URLs |
-| `OMSS_HOST_PORT` | no | Host port mapped to container `3000` (default `3000`) |
+| `PORT` | no | Container listen port (default `3000`). Healthchecks use this same value. |
+| `OMSS_HOST_PORT` | no | Host port mapped to container `PORT` (defaults to `PORT`) |
 | `CACHE_TYPE` | set by Compose | `redis` |
 | `REDIS_HOST` | set by Compose | `redis` |
 | `INTERNAL_DEBUG` | set by Compose | `false` |

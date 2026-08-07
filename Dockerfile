@@ -46,13 +46,17 @@ COPY --from=build --chown=omss:omss /app/dist ./dist
 COPY --from=build --chown=omss:omss /app/public ./public
 COPY --from=build --chown=omss:omss /app/config ./config
 COPY --from=build --chown=omss:omss /app/plugins ./plugins
+COPY --chown=omss:omss scripts/docker-healthcheck.sh /app/scripts/docker-healthcheck.sh
+
+RUN chmod +x /app/scripts/docker-healthcheck.sh
 
 USER omss
 
+# Default listen port; override at runtime with PORT=…
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
-  CMD curl -fsS http://127.0.0.1:3000/ >/dev/null || exit 1
+  CMD ["/app/scripts/docker-healthcheck.sh"]
 
 ENTRYPOINT ["dumb-init", "--"]
 CMD ["node", "dist/server.js"]

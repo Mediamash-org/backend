@@ -28,7 +28,8 @@ agent-transcripts
 apps/webos/node_modules
 apps/webos/dist
 apps/raw
-scripts
+scripts/*
+!scripts/docker-healthcheck.sh
 tests
 **/*.md
 !public/README.md
