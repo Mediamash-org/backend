@@ -74,7 +74,11 @@ export function PlayerScreen({
   const subTrackRef = useRef<TextTrack | null>(null)
   const subCacheRef = useRef<Map<string, string>>(new Map())
   const subRequestRef = useRef<string | null>(null)
+  const resumeTimeRef = useRef<number | null>(null)
+  const resumePlayRef = useRef(true)
+  const scrubTrackRef = useRef<HTMLDivElement>(null)
   const [subLoading, setSubLoading] = useState(false)
+  const [scrubbing, setScrubbing] = useState(false)
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -100,12 +104,96 @@ export function PlayerScreen({
   const revealUi = useCallback(() => {
     setShowUi(true)
     if (hideTimer.current) window.clearTimeout(hideTimer.current)
-    if (menu !== 'none' || paused) return
+    if (menu !== 'none' || paused || scrubbing) return
     hideTimer.current = window.setTimeout(() => setShowUi(false), 4500)
-  }, [menu, paused])
+  }, [menu, paused, scrubbing])
+
+  const capturePlayback = useCallback(() => {
+    const v = videoRef.current
+    if (!v || !Number.isFinite(v.currentTime)) return
+    resumeTimeRef.current = v.currentTime
+    resumePlayRef.current = !v.paused
+  }, [])
+
+  const seekTo = useCallback(
+    (time: number) => {
+      const v = videoRef.current
+      if (!v) return
+      const dur = Number.isFinite(v.duration) && v.duration > 0 ? v.duration : duration
+      if (!Number.isFinite(dur) || dur <= 0) return
+      const next = Math.max(0, Math.min(time, Math.max(0, dur - 0.05)))
+      v.currentTime = next
+      setCurrent(next)
+      revealUi()
+    },
+    [duration, revealUi],
+  )
+
+  const seekFromClientX = useCallback(
+    (clientX: number, trackEl: HTMLElement) => {
+      const rect = trackEl.getBoundingClientRect()
+      if (rect.width <= 0) return
+      const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width))
+      const dur =
+        videoRef.current && Number.isFinite(videoRef.current.duration) && videoRef.current.duration > 0
+          ? videoRef.current.duration
+          : duration
+      if (!Number.isFinite(dur) || dur <= 0) return
+      seekTo(ratio * dur)
+    },
+    [duration, seekTo],
+  )
+
+  const restorePlayback = useCallback((video: HTMLVideoElement) => {
+    const t = resumeTimeRef.current
+    const shouldPlay = resumePlayRef.current
+
+    const apply = () => {
+      if (t != null && Number.isFinite(t) && t > 0) {
+        const dur = video.duration
+        if (Number.isFinite(dur) && dur > 0) {
+          video.currentTime = Math.min(t, Math.max(0, dur - 0.25))
+          setCurrent(video.currentTime)
+        } else {
+          video.currentTime = t
+          setCurrent(t)
+        }
+      }
+      resumeTimeRef.current = null
+      if (shouldPlay) void video.play().catch(() => setPaused(true))
+      else {
+        video.pause()
+        setPaused(true)
+      }
+    }
+
+    if (t == null) {
+      if (shouldPlay !== false) void video.play().catch(() => setPaused(true))
+      return
+    }
+
+    if (Number.isFinite(video.duration) && video.duration > 0) {
+      apply()
+      return
+    }
+
+    const onReady = () => {
+      video.removeEventListener('loadedmetadata', onReady)
+      video.removeEventListener('durationchange', onReady)
+      apply()
+    }
+    video.addEventListener('loadedmetadata', onReady)
+    video.addEventListener('durationchange', onReady)
+    // Fallback if metadata already quietly available
+    window.setTimeout(() => {
+      if (resumeTimeRef.current == null) return
+      if (Number.isFinite(video.duration) && video.duration > 0) onReady()
+    }, 250)
+  }, [])
 
   const playEpisode = useCallback(
     (ep: EpisodeSummary, showTitle?: string) => {
+      resumeTimeRef.current = null
       setUpNext(null)
       setUpNextCountdown(0)
       setMenu('none')
@@ -128,6 +216,7 @@ export function PlayerScreen({
     setLoading(true)
     setError(null)
     setUpNext(null)
+    resumeTimeRef.current = null
     const req = streamPath
       ? fetchSourcesByPath(streamPath, ac.signal)
       : kind === 'movie'
@@ -219,6 +308,36 @@ export function PlayerScreen({
       setSubtitleOptions(buildSubtitleMenuOptions(apiSubtitles, hlsTracks))
     }
 
+    const publishAudioMenu = (
+      hlsTracks: Array<{ name?: string; lang?: string }> = [],
+    ) => {
+      // Prefer in-stream multi-audio when the playlist exposes multiple tracks.
+      // Otherwise fall back to per-source / provider audio options.
+      if (hlsTracks.length > 1) {
+        const hlsAudio: AudioTrackInfo[] = hlsTracks.map((t, i) => ({
+          id: `hls-a-${i}`,
+          label: t.name || t.lang || `Audio ${i + 1}`,
+          language: t.lang,
+          hlsTrackId: i,
+          sourceIndex,
+        }))
+        setAudioOptions(hlsAudio)
+        setActiveAudioId((prev) => {
+          if (prev && hlsAudio.some((a) => a.id === prev)) return prev
+          const hls = hlsRef.current
+          const idx = hls && hls.audioTrack >= 0 ? hls.audioTrack : 0
+          return hlsAudio[idx]?.id ?? hlsAudio[0]?.id ?? null
+        })
+        return
+      }
+      const fromSources = collectSourceAudioOptions(sources)
+      setAudioOptions(fromSources)
+      setActiveAudioId((prev) => {
+        if (prev && fromSources.some((a) => a.id === prev)) return prev
+        return fromSources[0]?.id ?? null
+      })
+    }
+
     if (useHls) {
       const hls = new Hls({
         enableWorker: true,
@@ -229,23 +348,14 @@ export function PlayerScreen({
       hls.loadSource(src.url)
       hls.attachMedia(video)
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        const hlsAudio: AudioTrackInfo[] = hls.audioTracks.map((t, i) => ({
-          id: `hls-a-${i}`,
-          label: t.name || t.lang || `Audio ${i + 1}`,
-          language: t.lang,
-          hlsTrackId: i,
-          sourceIndex,
-        }))
-        const fromSources = collectSourceAudioOptions(sources)
-        setAudioOptions(hlsAudio.length > 1 ? hlsAudio : fromSources)
-        if (hlsAudio.length > 1) {
-          setActiveAudioId(hlsAudio[hls.audioTrack]?.id ?? hlsAudio[0]?.id ?? null)
-        }
-
+        publishAudioMenu(hls.audioTracks)
         publishSubtitleMenu(hls.subtitleTracks)
-        void video.play().catch(() => setPaused(true))
+        restorePlayback(video)
       })
-      // Some manifests expose subtitle tracks after the initial parse.
+      // Some manifests expose tracks after the initial parse.
+      hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, () => {
+        publishAudioMenu(hls.audioTracks)
+      })
       hls.on(Hls.Events.SUBTITLE_TRACKS_UPDATED, () => {
         publishSubtitleMenu(hls.subtitleTracks)
       })
@@ -255,7 +365,7 @@ export function PlayerScreen({
     } else {
       video.src = src.url
       publishSubtitleMenu()
-      void video.play().catch(() => setPaused(true))
+      restorePlayback(video)
     }
 
     return () => {
@@ -269,7 +379,7 @@ export function PlayerScreen({
       video.removeAttribute('src')
       video.load()
     }
-  }, [sources, sourceIndex, apiSubtitles])
+  }, [sources, sourceIndex, apiSubtitles, restorePlayback])
 
   // UI auto-hide
   useEffect(() => {
@@ -350,15 +460,27 @@ export function PlayerScreen({
   const selectAudio = (opt: AudioTrackInfo) => {
     setActiveAudioId(opt.id)
     const hls = hlsRef.current
+    const video = videoRef.current
     if (opt.hlsTrackId != null && hls) {
+      capturePlayback()
+      const resumeAt = resumeTimeRef.current
       hls.audioTrack = opt.hlsTrackId
-    } else if (opt.sourceIndex != null && opt.sourceIndex !== sourceIndex) {
-      const video = videoRef.current
-      const t = video?.currentTime || 0
-      setSourceIndex(opt.sourceIndex)
+      const finish = () => {
+        if (resumeAt != null && video) {
+          video.currentTime = resumeAt
+          setCurrent(resumeAt)
+        }
+        resumeTimeRef.current = null
+        if (resumePlayRef.current && video) void video.play().catch(() => setPaused(true))
+      }
+      hls.once(Hls.Events.AUDIO_TRACK_SWITCHED, finish)
+      // Some builds switch synchronously / without the event
       window.setTimeout(() => {
-        if (videoRef.current) videoRef.current.currentTime = t
-      }, 400)
+        if (resumeTimeRef.current != null) finish()
+      }, 600)
+    } else if (opt.sourceIndex != null && opt.sourceIndex !== sourceIndex) {
+      capturePlayback()
+      setSourceIndex(opt.sourceIndex)
     }
     setMenu('none')
   }
@@ -484,6 +606,7 @@ export function PlayerScreen({
         onPause={() => setPaused(true)}
         onEnded={onEnded}
         onTimeUpdate={(e) => {
+          if (scrubbing) return
           const v = e.currentTarget
           setCurrent(v.currentTime)
           if (v.buffered.length) {
@@ -536,11 +659,47 @@ export function PlayerScreen({
           <Focusable
             id="player-scrub"
             className="nf-scrub"
+            role="slider"
+            aria-label="Seek"
+            onArrowKey={(dir) => {
+              if (dir !== 'left' && dir !== 'right') return false
+              const v = videoRef.current
+              if (!v) return true
+              const step = 30
+              seekTo(v.currentTime + (dir === 'right' ? step : -step))
+              return true
+            }}
             onSelect={() => {
-              /* focus enables left/right seek via global handler while UI visible */
+              /* focus only — left/right seek while focused */
             }}
           >
-            <div className="nf-scrub__track">
+            <div
+              ref={scrubTrackRef}
+              className="nf-scrub__track"
+              data-scrub-track="1"
+              onPointerDown={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                const track = e.currentTarget
+                track.setPointerCapture(e.pointerId)
+                setScrubbing(true)
+                revealUi()
+                seekFromClientX(e.clientX, track)
+
+                const onMove = (ev: PointerEvent) => seekFromClientX(ev.clientX, track)
+                const onUp = () => {
+                  setScrubbing(false)
+                  track.releasePointerCapture(e.pointerId)
+                  track.removeEventListener('pointermove', onMove)
+                  track.removeEventListener('pointerup', onUp)
+                  track.removeEventListener('pointercancel', onUp)
+                  revealUi()
+                }
+                track.addEventListener('pointermove', onMove)
+                track.addEventListener('pointerup', onUp)
+                track.addEventListener('pointercancel', onUp)
+              }}
+            >
               <div className="nf-scrub__buffer" style={{ width: `${bufferPct}%` }} />
               <div className="nf-scrub__progress" style={{ width: `${progress}%` }} />
               <div className="nf-scrub__knob" style={{ left: `${progress}%` }} />
@@ -717,6 +876,11 @@ export function PlayerScreen({
                     id={`quality-${i}`}
                     className={`nf-menu__item${sourceIndex === i ? ' is-active' : ''}`}
                     onSelect={() => {
+                      if (i === sourceIndex) {
+                        setMenu('none')
+                        return
+                      }
+                      capturePlayback()
                       setSourceIndex(i)
                       setMenu('none')
                     }}

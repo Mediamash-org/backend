@@ -6,8 +6,13 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react'
-import { directionFromKey, isSelectKey, moveFocus, syncScrollToFocus } from '../navigation/spatialNav'
-
+import {
+  directionFromKey,
+  isSelectKey,
+  moveFocus,
+  syncScrollToFocus,
+  type NavDirection,
+} from '../navigation/spatialNav'
 
 interface FocusableProps {
   id?: string
@@ -15,6 +20,8 @@ interface FocusableProps {
   children?: ReactNode
   onSelect?: () => void
   onFocus?: () => void
+  /** Return true to consume the arrow (e.g. scrubber seek) instead of moving focus. */
+  onArrowKey?: (direction: NavDirection) => boolean
   disabled?: boolean
   role?: string
   tabIndex?: number
@@ -31,6 +38,7 @@ export function Focusable({
   children,
   onSelect,
   onFocus,
+  onArrowKey,
   disabled,
   role = 'button',
   tabIndex = 0,
@@ -56,6 +64,11 @@ export function Focusable({
 
     const direction = directionFromKey(e.nativeEvent)
     if (direction) {
+      if (onArrowKey?.(direction)) {
+        e.preventDefault()
+        e.stopPropagation()
+        return
+      }
       e.preventDefault()
       e.stopPropagation()
       moveFocus(direction)

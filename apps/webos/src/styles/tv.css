@@ -1380,19 +1380,22 @@ img {
 .nf-scrub {
   display: block;
   padding: 8px 0;
+  cursor: pointer;
 }
 
 .nf-scrub__track {
   position: relative;
-  height: 6px;
+  height: 10px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.22);
   overflow: visible;
+  touch-action: none;
+  cursor: pointer;
 }
 
 .nf-scrub:focus .nf-scrub__track,
 .nf-scrub:focus-visible .nf-scrub__track {
-  height: 10px;
+  height: 14px;
   box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.35);
 }
 
@@ -1401,6 +1404,7 @@ img {
   inset: 0 auto 0 0;
   background: rgba(255, 255, 255, 0.28);
   border-radius: inherit;
+  pointer-events: none;
 }
 
 .nf-scrub__progress {
@@ -1408,23 +1412,27 @@ img {
   inset: 0 auto 0 0;
   background: var(--accent);
   border-radius: inherit;
+  pointer-events: none;
 }
 
 .nf-scrub__knob {
   position: absolute;
   top: 50%;
-  width: 16px;
-  height: 16px;
-  margin-left: -8px;
+  width: 18px;
+  height: 18px;
+  margin-left: -9px;
   border-radius: 50%;
   background: #fff;
-  transform: translateY(-50%) scale(0);
+  transform: translateY(-50%) scale(0.85);
   transition: transform 120ms ease;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
 }
 
 .nf-scrub:focus .nf-scrub__knob,
-.nf-scrub:focus-visible .nf-scrub__knob {
-  transform: translateY(-50%) scale(1);
+.nf-scrub:focus-visible .nf-scrub__knob,
+.nf-scrub__track:active .nf-scrub__knob {
+  transform: translateY(-50%) scale(1.15);
 }
 
 .nf-scrub__times {
