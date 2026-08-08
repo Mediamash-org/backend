@@ -6,12 +6,12 @@ How maintainers publish versioned Docker images and GitHub Releases for **[Media
 
 1. You run `npm run release -- <semver>` (or push a `v*` tag yourself).
 2. Workflow [`.github/workflows/docker-release.yml`](../.github/workflows/docker-release.yml) runs on the tag.
-3. It builds **linux/amd64** and **linux/arm64** images and pushes them to **GitHub Container Registry**:
+3. It builds a **linux/amd64** image and pushes it to **GitHub Container Registry**:
    - `ghcr.io/mediamash-org/backend:<version>`
-   - `ghcr.io/mediamash-org/backend:<major>.<minor>`
-   - `ghcr.io/mediamash-org/backend:<major>`
    - `ghcr.io/mediamash-org/backend:latest` (stable tags only; not `v1.2.0-rc.1`)
    - `ghcr.io/mediamash-org/backend:sha-<short>`
+
+> **Note:** Multi-arch `linux/arm64` via QEMU was removed from CI — emulated `npm`/`tsc` is so slow the job looks stuck. Add ARM later with a native `ubuntu-24.04-arm` runner if needed.
 4. A **GitHub Release** is created with pull instructions and the commit log since the previous tag.
 
 CI on every PR: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).

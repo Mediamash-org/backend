@@ -12,8 +12,8 @@ RUN apt-get update \
 COPY package.json package-lock.json ./
 COPY plugins ./plugins
 
-# postinstall builds provider plugin dist/
-RUN npm ci
+# Skip postinstall here — plugins are compiled once in the build step below.
+RUN npm ci --ignore-scripts
 
 COPY tsconfig.json ./
 COPY src ./src
