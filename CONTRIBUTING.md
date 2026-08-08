@@ -28,7 +28,6 @@ Useful scripts:
 | `npm run build` | Compile server + provider plugins |
 | `npm run typecheck` | TypeScript only |
 | `npm test` | Vitest suite |
-| `npm run webos:dev` | LG webOS client (Vite) |
 | `npm run release -- x.y.z` | Tag + push a production Docker release |
 
 Server defaults to `http://localhost:3000`. Console UI: `/ui`.
@@ -43,11 +42,12 @@ src/                  Host (Fastify + @omss/framework glue)
   proxy/              Fixed /v1/proxy (Range / HLS rewrite)
   meta/               TMDB-backed /api/* catalog for clients
 plugins/              Installable provider packages (@omss-server/*)
-apps/webos/           MediaMash TV client
 config/providers.json Enabled plugins + options
 docs/                 Spec, architecture, providers, deployment, releasing
 .github/workflows/    CI + Docker GHCR release
 ```
+
+Client apps (webOS, etc.) live in https://github.com/Mediamash-org/apps
 
 ## Creating a provider
 

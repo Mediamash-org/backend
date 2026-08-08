@@ -64,13 +64,11 @@ Enable/disable in [`config/providers.json`](config/providers.json). Bundled pack
 
 **Author a new one:** start from [`plugins/sample-provider-plugin`](plugins/sample-provider-plugin) and follow the [plugin guide](docs/PROVIDER_PLUGIN_GUIDE.md).
 
-## webOS client
+## Client apps
 
-```bash
-npm run webos:dev
-```
+TV / web clients live in a separate repo: **[Mediamash-org/apps](https://github.com/Mediamash-org/apps)** (`webos/`, shared `raw/` icons).
 
-Point Settings → Server at your `PUBLIC_URL`. Packaging notes: [`apps/webos/README.md`](apps/webos/README.md).
+Point the app Settings → Server at your backend `PUBLIC_URL`.
 
 ## Support the project
 

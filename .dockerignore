@@ -22,12 +22,9 @@ coverage
 tmp
 *.log
 
-# Docs & non-runtime app trees
+# Docs & non-runtime trees
 docs
 agent-transcripts
-apps/webos/node_modules
-apps/webos/dist
-apps/raw
 scripts/*
 !scripts/docker-healthcheck.sh
 tests
