@@ -71,7 +71,7 @@ One repo per client platform:
 | Platform | Repo |
 |----------|------|
 | webOS TV | [Mediamash-org/webos](https://github.com/Mediamash-org/webos) |
-| Android | `Mediamash-org/android` (planned) |
+| Android (phone + TV) | [Mediamash-org/android](https://github.com/Mediamash-org/android) |
 | Website | `Mediamash-org/website` (planned) |
 
 Point each app’s server setting at your backend `PUBLIC_URL`.
