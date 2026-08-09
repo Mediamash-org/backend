@@ -40,20 +40,24 @@ git push -u origin main
 - Actions permissions: allow workflow + org actions as you prefer.
 - **Workflow permissions:** Read and write permissions (needed for Releases + GHCR).
 
-### 3. Make GHCR packages public (recommended)
+### 3. Make GHCR packages public (required for anonymous `docker pull`)
 
-After the first successful release:
+GitHub Container Registry packages are **private by default**, even when this git repo is public. The release workflow tries to flip visibility to **public** after each push.
 
-1. GitHub profile/org → **Packages**.
-2. Open `ghcr.io/mediamash-org/backend`.
-3. **Package settings → Change visibility → Public**.
+If pulls still need a login:
 
-Until then, consumers need a PAT:
+1. Org → **Packages** → `backend` (or open the package from the latest Release).
+2. **Package settings → Change visibility → Public**.
+3. Org **Settings → Packages**: allow publishing public packages (if that option exists).
+
+Until the package is public:
 
 ```bash
 echo YOUR_GHCR_PAT | docker login ghcr.io -u USERNAME --password-stdin
 docker pull ghcr.io/mediamash-org/backend:latest
 ```
+
+The GitHub **Release** page itself follows the repo visibility (this repo is public → releases are public). Only the **Docker image** was private.
 
 ### 4. Optional: Actions secrets
 

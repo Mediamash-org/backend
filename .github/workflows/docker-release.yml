@@ -129,6 +129,37 @@ jobs:
           provenance: false
           sbom: false
 
+      # GHCR packages default to private even when the git repo is public.
+      # Without this, `docker pull` fails for anonymous users.
+      - name: Make GHCR package public
+        if: steps.ver.outputs.is_release == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          PACKAGE: ${{ github.event.repository.name }}
+        run: |
+          set -euo pipefail
+          OWNER_LC="$(echo "${OWNER}" | tr '[:upper:]' '[:lower:]')"
+          echo "Setting package container/${PACKAGE} under ${OWNER} (ghcr.io/${OWNER_LC}/${PACKAGE}) → public"          # Org package (Mediamash-org/…)
+          if gh api --method PUT \
+            -H "Accept: application/vnd.github+json" \
+            "/orgs/${OWNER}/packages/container/${PACKAGE}/visibility" \
+            -f visibility=public; then
+            echo "Package is public."
+            exit 0
+          fi
+          # Fallback: user-owned package
+          if gh api --method PUT \
+            -H "Accept: application/vnd.github+json" \
+            "/user/packages/container/${PACKAGE}/visibility" \
+            -f visibility=public; then
+            echo "Package is public (user namespace)."
+            exit 0
+          fi
+          echo "::warning::Could not make the GHCR package public automatically."
+          echo "Do this once in the UI: GitHub → Packages → ${PACKAGE} → Package settings → Change visibility → Public"
+          echo "Also ensure the org allows public packages (Organization settings → Packages)."
+
       - name: Package Compose deploy assets
         id: bundle
         if: steps.ver.outputs.is_release == 'true'
