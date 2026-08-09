@@ -59,8 +59,12 @@ services:
       INTERNAL_DEBUG: "false"
     ports:
       - "${OMSS_HOST_PORT:-${PORT:-3000}}:${PORT:-3000}"
-    volumes:
-      - ./config/providers.json:/app/config/providers.json:ro
+    # Image already ships /app/config/providers.json.
+    # Only mount a host file if it exists as a *file* (not a directory).
+    # If Docker ever created config/providers.json as a folder, remove it:
+    #   rm -rf ./config/providers.json && cp providers.example.json ./config/providers.json
+    # volumes:
+    #   - ./config/providers.json:/app/config/providers.json:ro
     networks:
       - internal
       - edge

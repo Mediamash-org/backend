@@ -19,9 +19,10 @@ cp .env.example .env
 #   OMSS_PULL_POLICY=always
 cp .env.image .env.image.local   # optional; or merge into .env
 
-# Optional provider overrides — start from the example:
+# Optional provider overrides — image already has defaults. Only needed to customize:
 mkdir -p config
 cp providers.example.json config/providers.json
+# then uncomment the volumes: providers.json mount in docker-compose.yml
 
 # Load image pin + app env, then start
 export $(grep -v '^#' .env.image | xargs)   # bash

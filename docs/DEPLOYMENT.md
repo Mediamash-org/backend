@@ -107,7 +107,17 @@ Copy from [`.env.docker.example`](../.env.docker.example). Compose always inject
 | `OMSS_NAME` | no | Backend display name |
 | `SOURCE_PROBE_TIMEOUT_MS` | no | Default `12000` |
 
-Provider toggles live in [`config/providers.json`](../config/providers.json) (mounted read-only into the container). Edit on the host and reload:
+Provider toggles ship inside the image at `/app/config/providers.json`. A host mount is optional.
+
+To override from the host, ensure `./config/providers.json` is a **file** (not a directory), then uncomment the volume in Compose. If Compose was started when the file was missing, Docker may have created a directory there — fix with:
+
+```bash
+rm -rf ./config/providers.json
+mkdir -p config
+cp providers.example.json ./config/providers.json   # or config/providers.example.json from a clone
+```
+
+Reload after edits:
 
 ```bash
 curl -X POST http://127.0.0.1:3000/admin/providers/reload
@@ -220,7 +230,8 @@ Backup:
 | Symptom | Likely cause |
 |---------|----------------|
 | Empty `sources` arrays | `PUBLIC_URL` wrong; probes failing; provider disabled; TMDB id invalid |
-| Health OK but no providers in `/` | `config/providers.json` mount / reload issue |
+| Health OK but no providers in `/` | Provider config / reload issue — check image defaults or host `providers.json` mount |
+| Container fails: mount `providers.json` “not a directory” | Host path is a folder Docker created when the file was missing — `rm -rf ./config/providers.json` and either omit the volume or create a real file |
 | Redis connection errors | `omss` started before Redis healthy — check `docker compose ps` |
 | TLS works but streams 502 | Proxy buffering/timeouts; confirm `/v1/proxy` reaches the container |
 | DNS errors for your domain on the server | Expected for some hosts; probes use loopback when URL matches `PUBLIC_URL` |

@@ -65,9 +65,11 @@ services:
     ports:
       # host:container — both configurable via .env
       - "${OMSS_HOST_PORT:-${PORT:-3000}}:${PORT:-3000}"
-    volumes:
-      # Hot-swap providers without rebuilding (optional).
-      - ./config/providers.json:/app/config/providers.json:ro
+    # Optional host override. Image already includes config/providers.json.
+    # Do not enable until ./config/providers.json exists as a regular file
+    # (if missing, Docker creates a directory and the container fails to start).
+    # volumes:
+    #   - ./config/providers.json:/app/config/providers.json:ro
     networks:
       - internal
       - edge
