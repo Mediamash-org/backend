@@ -10,9 +10,13 @@ How maintainers publish versioned Docker images and GitHub Releases for **[Media
    - `ghcr.io/mediamash-org/backend:<version>`
    - `ghcr.io/mediamash-org/backend:latest` (stable tags only; not `v1.2.0-rc.1`)
    - `ghcr.io/mediamash-org/backend:sha-<short>`
+4. A **GitHub Release** is created with:
+   - Pull / Compose instructions
+   - **`mediamash-backend-<version>-compose.zip`** — production Compose stack (image-only, no build)
+   - `.env.image` pinning `OMSS_IMAGE` to that version
 
 > **Note:** Multi-arch `linux/arm64` via QEMU was removed from CI — emulated `npm`/`tsc` is so slow the job looks stuck. Add ARM later with a native `ubuntu-24.04-arm` runner if needed.
-4. A **GitHub Release** is created with pull instructions and the commit log since the previous tag.
+5. Commit log since the previous tag is included in the release notes.
 
 CI on every PR: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).
 
@@ -92,6 +96,12 @@ Watch **Actions → Docker release**. When green, open the new **Release** on Gi
 
 ## Consume a release
 
+### Option A — release zip (no git clone)
+
+Download `mediamash-backend-<version>-compose.zip` from the Release assets, then follow its `README.md`.
+
+### Option B — clone + prod compose
+
 `.env`:
 
 ```env
@@ -103,11 +113,11 @@ PORT=3000
 ```
 
 ```bash
-docker compose pull omss
-docker compose up -d
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml up -d
 ```
 
-Or skip Compose image overrides and build from the Dockerfile as in [DEPLOYMENT.md](./DEPLOYMENT.md).
+Or use the default `docker-compose.yml` (supports local `--build`) with the same `OMSS_IMAGE` override — see [DEPLOYMENT.md](./DEPLOYMENT.md).
 
 ## Versioning
 

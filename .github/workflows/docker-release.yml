@@ -1,12 +1,9 @@
 name: Docker release
 
-# Build image → GHCR, then create a GitHub Release.
+# Build linux/amd64 image → GHCR, create GitHub Release with Compose deploy assets.
 #
-# Default platform is linux/amd64 (native on GitHub runners).
-# Emulated linux/arm64 via QEMU is extremely slow (npm/tsc) and looks "stuck".
-#
-# Triggers: tag push vX.Y.Z · or Actions → Run workflow
-# Local: npm run release -- 1.2.0
+# Triggers: push tag vX.Y.Z · Actions → Run workflow
+# Local:    npm run release -- 1.2.0
 
 on:
   push:
@@ -15,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Rebuild this git tag (e.g. v1.2.0). Leave empty to publish :edge from the default branch."
+        description: "Git tag to rebuild (e.g. v1.2.0). Empty = publish :edge from default branch (no GitHub Release)."
         required: false
         type: string
 
@@ -31,7 +28,6 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  # Native amd64 only — add arm64 later with a native ARM runner, not QEMU.
   DOCKER_PLATFORMS: linux/amd64
 
 jobs:
@@ -130,9 +126,60 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          # Provenance/SBOM multi-platform attestations are heavy; keep off for faster releases.
           provenance: false
           sbom: false
+
+      - name: Package Compose deploy assets
+        id: bundle
+        if: steps.ver.outputs.is_release == 'true'
+        env:
+          IMAGE: ${{ steps.image.outputs.image }}
+          VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          set -euo pipefail
+          OUT=dist-release
+          rm -rf "$OUT"
+          mkdir -p "$OUT/config"
+
+          # Ship as docker-compose.yml so `docker compose up` works after unzip.
+          cp docker-compose.prod.yml "$OUT/docker-compose.yml"
+          cp .env.docker.example "$OUT/.env.example"
+          cp deploy/README.md "$OUT/README.md"
+
+          if [ -f config/providers.example.json ]; then
+            cp config/providers.example.json "$OUT/providers.example.json"
+            cp config/providers.example.json "$OUT/config/providers.json"
+          elif [ -f config/providers.json ]; then
+            cp config/providers.json "$OUT/providers.example.json"
+            cp config/providers.json "$OUT/config/providers.json"
+          fi
+
+          {
+            echo "# Image pin for this GitHub Release — merge into .env or export before compose up"
+            echo "OMSS_IMAGE=${IMAGE}:${VERSION}"
+            echo "OMSS_PULL_POLICY=always"
+          } > "$OUT/.env.image"
+
+          # Convenience: pre-fill OMSS_IMAGE inside a copy of the env example
+          {
+            echo "# Generated for release v${VERSION} — copy to .env and set TMDB_API_KEY + PUBLIC_URL"
+            echo ""
+            echo "OMSS_IMAGE=${IMAGE}:${VERSION}"
+            echo "OMSS_PULL_POLICY=always"
+            echo ""
+            # Drop commented OMSS_IMAGE block from example to avoid confusion
+            grep -v '^#   OMSS_IMAGE=' .env.docker.example \
+              | grep -v '^#   OMSS_PULL_POLICY=' \
+              | grep -v '^# OMSS_IMAGE=' \
+              | grep -v '^# OMSS_PULL_POLICY=' \
+              | grep -v '^OMSS_IMAGE=' \
+              | grep -v '^OMSS_PULL_POLICY='
+          } > "$OUT/.env.release.example"
+
+          ZIP="mediamash-backend-${VERSION}-compose.zip"
+          (cd "$OUT" && zip -r "../${ZIP}" .)
+          echo "zip=${ZIP}" >> "$GITHUB_OUTPUT"
+          ls -la "$OUT" "${ZIP}"
 
       - name: Generate release notes
         id: notes
@@ -141,10 +188,29 @@ jobs:
           TAG: v${{ steps.ver.outputs.version }}
           IMAGE: ${{ steps.image.outputs.image }}
           VERSION: ${{ steps.ver.outputs.version }}
+          ZIP: ${{ steps.bundle.outputs.zip }}
         run: |
           set -euo pipefail
           {
             echo "## MediaMash backend \`${TAG}\`"
+            echo ""
+            echo "Production Docker image for Compose."
+            echo ""
+            echo "### Quick start (recommended)"
+            echo ""
+            echo "1. Download **\`${ZIP}\`** from this release (Assets below)."
+            echo "2. Unzip, copy \`.env.example\` → \`.env\`, set \`TMDB_API_KEY\` and \`PUBLIC_URL\`."
+            echo "3. Merge image pin from \`.env.image\` into \`.env\` (or export it)."
+            echo "4. Start:"
+            echo ""
+            echo "\`\`\`bash"
+            echo "unzip ${ZIP} -d mediamash && cd mediamash"
+            echo "cp .env.example .env"
+            echo "# edit .env — TMDB_API_KEY, PUBLIC_URL"
+            echo "cat .env.image >> .env"
+            echo "docker compose up -d"
+            echo "curl -fsS http://127.0.0.1:3000/"
+            echo "\`\`\`"
             echo ""
             echo "### Docker (GHCR)"
             echo ""
@@ -155,11 +221,16 @@ jobs:
             fi
             echo "\`\`\`"
             echo ""
-            echo "Compose (\`.env\`):"
+            echo "From a git clone:"
             echo ""
             echo "\`\`\`env"
             echo "OMSS_IMAGE=${IMAGE}:${VERSION}"
             echo "OMSS_PULL_POLICY=always"
+            echo "\`\`\`"
+            echo ""
+            echo "\`\`\`bash"
+            echo "docker compose -f docker-compose.prod.yml pull"
+            echo "docker compose -f docker-compose.prod.yml up -d"
             echo "\`\`\`"
             echo ""
             echo "Docs: [DEPLOYMENT](https://github.com/${{ github.repository }}/blob/${TAG}/docs/DEPLOYMENT.md) · [RELEASING](https://github.com/${{ github.repository }}/blob/${TAG}/docs/RELEASING.md)"
@@ -182,12 +253,19 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.ver.outputs.version }}
-          name: v${{ steps.ver.outputs.version }}
+          name: MediaMash backend v${{ steps.ver.outputs.version }}
           body_path: release-body.md
           draft: false
           prerelease: ${{ steps.ver.outputs.is_prerelease == 'true' }}
           generate_release_notes: true
           make_latest: ${{ steps.ver.outputs.is_prerelease == 'false' }}
+          files: |
+            ${{ steps.bundle.outputs.zip }}
+            dist-release/docker-compose.yml
+            dist-release/.env.example
+            dist-release/.env.image
+            dist-release/.env.release.example
+            dist-release/README.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -200,6 +278,10 @@ jobs:
             echo "- **Version tag:** \`${{ steps.ver.outputs.version }}\`"
             echo "- **Platforms:** \`${{ env.DOCKER_PLATFORMS }}\`"
             echo "- **Digest:** \`${{ steps.build.outputs.digest }}\`"
+            if [ "${{ steps.ver.outputs.is_release }}" = "true" ]; then
+              echo "- **Compose zip:** \`${{ steps.bundle.outputs.zip }}\`"
+              echo "- **GitHub Release:** created/updated for \`v${{ steps.ver.outputs.version }}\`"
+            fi
             echo ""
             echo "\`\`\`"
             echo "${{ steps.meta.outputs.tags }}"

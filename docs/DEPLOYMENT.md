@@ -35,9 +35,15 @@ docker compose ps
 curl -fsS "$PUBLIC_URL/"   # or http://127.0.0.1:${PORT:-3000}/ if testing locally
 ```
 
-### Use a GitHub Release image (GHCR)
+### Use a GitHub Release image (GHCR) — recommended for production
 
-After the org publishes a tag (see [RELEASING.md](./RELEASING.md)):
+1. Open the latest [Release](https://github.com/Mediamash-org/backend/releases).
+2. Download **`mediamash-backend-<version>-compose.zip`**, unzip it.
+3. `cp .env.example .env` — set `TMDB_API_KEY` and `PUBLIC_URL`.
+4. Append the image pin: `cat .env.image >> .env`
+5. `docker compose up -d`
+
+Or from a clone of this repo:
 
 ```env
 OMSS_IMAGE=ghcr.io/mediamash-org/backend:1.2.0
@@ -45,9 +51,11 @@ OMSS_PULL_POLICY=always
 ```
 
 ```bash
-docker compose pull omss
-docker compose up -d
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml up -d
 ```
+
+(`docker-compose.prod.yml` pulls the released image only — no local build.)
 
 Useful checks:
 

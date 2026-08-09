@@ -1,11 +1,17 @@
-# MediaMash / OMSS — Docker Compose
+# MediaMash / OMSS — production stack (released image only)
 #
-# Local / build-from-source:
-#   cp .env.docker.example .env && docker compose up -d --build
+# Pulls from GitHub Container Registry. No local Docker build required.
 #
-# Production (released GHCR image, no build):
+#   curl -fsSL https://github.com/Mediamash-org/backend/releases/latest/download/mediamash-backend-compose.zip -o compose.zip
+#   unzip compose.zip && cp .env.example .env
+#   # edit .env (TMDB_API_KEY, PUBLIC_URL) — image pin is in .env.image
+#   set -a && source .env && source .env.image && set +a
+#   docker compose up -d
+#
+# Or from a git clone:
+#   cp .env.docker.example .env
+#   # set OMSS_IMAGE=ghcr.io/mediamash-org/backend:<version>
 #   docker compose -f docker-compose.prod.yml up -d
-#   or download the compose zip from GitHub Releases
 #
 # Docs: docs/DEPLOYMENT.md
 
@@ -33,20 +39,11 @@ services:
       timeout: 3s
       retries: 5
       start_period: 5s
-    # Do not publish Redis to the host in production.
-    # ports:
-    #   - "6379:6379"
 
   omss:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    # Prefer a released image in production, e.g.:
-    #   OMSS_IMAGE=ghcr.io/mediamash-org/backend:1.2.0
-    # Leave unset (or comment image) to build locally from this Dockerfile.
     image: ${OMSS_IMAGE:-ghcr.io/mediamash-org/backend:latest}
+    pull_policy: ${OMSS_PULL_POLICY:-always}
     restart: unless-stopped
-    pull_policy: ${OMSS_PULL_POLICY:-missing}
     depends_on:
       redis:
         condition: service_healthy
@@ -55,18 +52,14 @@ services:
     environment:
       NODE_ENV: production
       HOST: 0.0.0.0
-      # Container listen port — same value used by healthchecks (from .env).
       PORT: ${PORT:-3000}
       CACHE_TYPE: redis
       REDIS_HOST: redis
       REDIS_PORT: "6379"
-      # Never skip playability probes in production unless you know why.
       INTERNAL_DEBUG: "false"
     ports:
-      # host:container — both configurable via .env
       - "${OMSS_HOST_PORT:-${PORT:-3000}}:${PORT:-3000}"
     volumes:
-      # Hot-swap providers without rebuilding (optional).
       - ./config/providers.json:/app/config/providers.json:ro
     networks:
       - internal
@@ -77,8 +70,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 45s
-    # Extra headroom for concurrent provider scrapes + HLS proxy.
-    # Honored by Compose V2 (non-Swarm) for memory caps.
     deploy:
       resources:
         limits:
@@ -92,11 +83,9 @@ services:
         max-file: "5"
 
 networks:
-  # App ↔ Redis only
   internal:
     driver: bridge
     internal: true
-  # Published ports / reverse-proxy peers
   edge:
     driver: bridge
 
