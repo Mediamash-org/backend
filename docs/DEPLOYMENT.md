@@ -9,7 +9,7 @@ Deploy MediaMash (OMSS server) with Docker Compose: API + stream proxy + Redis c
 | `omss` | Node server (`/`, `/v1/*`, `/api/*`, `/ui`, `/admin/*`) |
 | `redis` | Source / subtitle cache (`CACHE_TYPE=redis`) |
 
-The LG webOS app lives in **[Mediamash-org/apps](https://github.com/Mediamash-org/apps)** and is pointed at your `PUBLIC_URL`. It is not baked into this image.
+The LG webOS app lives in **[Mediamash-org/webos](https://github.com/Mediamash-org/webos)** and is pointed at your `PUBLIC_URL`. It is not baked into this image.
 
 ## Requirements
 
@@ -165,7 +165,7 @@ Do **not** publish Redis (`6379`) to the internet. The Compose file keeps Redis 
 ## webOS / client apps
 
 1. Deploy the server as above.
-2. Build the TV app from [Mediamash-org/apps](https://github.com/Mediamash-org/apps) (`webos/`).
+2. Build the TV app from [Mediamash-org/webos](https://github.com/Mediamash-org/webos).
 3. During onboarding / Settings → Server, set the API address to the same origin as `PUBLIC_URL` (e.g. `https://omss.example.com`).
 
 Catalog calls use `/api/*`; streams use `/v1/*` on that base URL.

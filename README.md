@@ -66,9 +66,15 @@ Enable/disable in [`config/providers.json`](config/providers.json). Bundled pack
 
 ## Client apps
 
-TV / web clients live in a separate repo: **[Mediamash-org/apps](https://github.com/Mediamash-org/apps)** (`webos/`, shared `raw/` icons).
+One repo per client platform:
 
-Point the app Settings → Server at your backend `PUBLIC_URL`.
+| Platform | Repo |
+|----------|------|
+| webOS TV | [Mediamash-org/webos](https://github.com/Mediamash-org/webos) |
+| Android | `Mediamash-org/android` (planned) |
+| Website | `Mediamash-org/website` (planned) |
+
+Point each app’s server setting at your backend `PUBLIC_URL`.
 
 ## Support the project
 

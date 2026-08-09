@@ -47,7 +47,7 @@ docs/                 Spec, architecture, providers, deployment, releasing
 .github/workflows/    CI + Docker GHCR release
 ```
 
-Client apps (webOS, etc.) live in https://github.com/Mediamash-org/apps
+Client apps live in separate repos (one per platform), e.g. https://github.com/Mediamash-org/webos
 
 ## Creating a provider
 
