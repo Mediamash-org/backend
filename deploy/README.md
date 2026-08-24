@@ -19,9 +19,11 @@ cp .env.example .env
 #   OMSS_PULL_POLICY=always
 cp .env.image .env.image.local   # optional; or merge into .env
 
-# Optional provider overrides — image already has defaults. Only needed to customize:
-mkdir -p config
-cp providers.example.json config/providers.json
+# Optional provider overrides — image already has defaults. Only mount if you
+# need to customize. If you mount a host file, it fully replaces the image list
+# (new plugins from a release will not appear until you merge them in).
+# mkdir -p config
+# cp providers.example.json config/providers.json
 # then uncomment the volumes: providers.json mount in docker-compose.yml
 
 # Load image pin + app env, then start
@@ -42,7 +44,14 @@ echo YOUR_PAT | docker login ghcr.io -u YOUR_GITHUB_USER --password-stdin
 ```bash
 # After a new release, update OMSS_IMAGE in .env / .env.image
 docker compose pull omss
-docker compose up -d
+docker compose up -d --force-recreate omss
+
+# If you mount ./config/providers.json, refresh it from this release (or merge
+# new plugin entries), then recreate — otherwise the host file keeps old plugins:
+#   cp providers.example.json config/providers.json
+#   docker compose up -d --force-recreate omss
+
+curl -fsS "http://127.0.0.1:${PORT:-3000}/admin/providers"
 ```
 
 Full docs: https://github.com/Mediamash-org/backend/blob/main/docs/DEPLOYMENT.md

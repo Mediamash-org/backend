@@ -3,7 +3,7 @@
   "plugins": [
     {
       "package": "@omss-server/sample-provider-plugin",
-      "enabled": true,
+      "enabled": false,
       "config": {
         "id": "sample-plugin",
         "name": "Sample Plugin Provider"
@@ -19,15 +19,16 @@
     },
     {
       "package": "@omss-server/peachify-provider",
-      "enabled": true,
+      "enabled": false,
       "config": {
         "id": "peachify",
-        "name": "Peachify"
+        "name": "Peachify",
+        "servers": ["holly", "air", "multi", "moviebox", "net"]
       }
     },
     {
       "package": "@omss-server/vidsrc-provider",
-      "enabled": true,
+      "enabled": false,
       "config": {
         "id": "vidsrc",
         "name": "VidSrc"
@@ -39,6 +40,88 @@
       "config": {
         "id": "2embed",
         "name": "2Embed"
+      }
+    },
+    {
+      "package": "@omss-server/bingr-provider",
+      "enabled": true,
+      "config": {
+        "id": "bingr",
+        "name": "Bingr",
+        "servers": ["s11", "s30", "s3", "s4"]
+      }
+    },
+    {
+      "package": "@omss-server/streamingunity-provider",
+      "enabled": false,
+      "config": {
+        "id": "streamingunity",
+        "name": "StreamingUnity",
+        "locale": "en"
+      }
+    },
+    {
+      "package": "@omss-server/filmo-provider",
+      "enabled": true,
+      "config": {
+        "id": "filmo",
+        "name": "Filmo"
+      }
+    },
+    {
+      "package": "@omss-server/pikashow-provider",
+      "enabled": true,
+      "config": {
+        "id": "pikashow",
+        "name": "Pikashow",
+        "preferredLangs": ["English", "Hindi"]
+      }
+    },
+    {
+      "package": "@omss-server/vaultplayer-provider",
+      "enabled": true,
+      "config": {
+        "id": "vaultplayer",
+        "name": "VaultPlayer",
+        "maxStreams": 3
+      }
+    },
+    {
+      "package": "@omss-server/vidcore-provider",
+      "enabled": true,
+      "config": {
+        "id": "vidcore",
+        "name": "VidCore",
+        "maxStreams": 4
+      }
+    },
+    {
+      "package": "@omss-server/videasy-provider",
+      "enabled": true,
+      "config": {
+        "id": "videasy",
+        "name": "Videasy",
+        "maxStreams": 4,
+        "servers": ["cdn", "m4uhd"]
+      }
+    },
+    {
+      "package": "@omss-server/dulo-provider",
+      "enabled": true,
+      "config": {
+        "id": "dulo",
+        "name": "Dulo",
+        "maxStreams": 4
+      }
+    },
+    {
+      "package": "@omss-server/hdmovie2-provider",
+      "enabled": true,
+      "config": {
+        "id": "hdmovie2",
+        "name": "HDMovie2",
+        "maxStreams": 3,
+        "preferHindi": true
       }
     }
   ],

@@ -109,6 +109,8 @@ Copy from [`.env.docker.example`](../.env.docker.example). Compose always inject
 
 Provider toggles ship inside the image at `/app/config/providers.json`. A host mount is optional.
 
+**Important:** a mounted host file **fully replaces** the image list. After upgrading, merge new plugin entries from the release’s `providers.example.json` (or remove the volume) — otherwise new providers will not load even though they are installed in the image.
+
 To override from the host, ensure `./config/providers.json` is a **file** (not a directory), then uncomment the volume in Compose. If Compose was started when the file was missing, Docker may have created a directory there — fix with:
 
 ```bash
@@ -231,6 +233,7 @@ Backup:
 |---------|----------------|
 | Empty `sources` arrays | `PUBLIC_URL` wrong; probes failing; provider disabled; TMDB id invalid |
 | Health OK but no providers in `/` | Provider config / reload issue — check image defaults or host `providers.json` mount |
+| Image updated but new plugins missing | Host `./config/providers.json` mount overrides the image — refresh from `providers.example.json` in the release zip (or remove the volume) and `docker compose up -d --force-recreate omss` |
 | Container fails: mount `providers.json` “not a directory” | Host path is a folder Docker created when the file was missing — `rm -rf ./config/providers.json` and either omit the volume or create a real file |
 | Redis connection errors | `omss` started before Redis healthy — check `docker compose ps` |
 | TLS works but streams 502 | Proxy buffering/timeouts; confirm `/v1/proxy` reaches the container |

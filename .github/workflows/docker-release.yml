@@ -177,12 +177,15 @@ jobs:
           cp .env.docker.example "$OUT/.env.example"
           cp deploy/README.md "$OUT/README.md"
 
-          if [ -f config/providers.example.json ]; then
-            cp config/providers.example.json "$OUT/providers.example.json"
-            cp config/providers.example.json "$OUT/config/providers.json"
-          elif [ -f config/providers.json ]; then
+          # Prefer the full production defaults (providers.json). The example file
+          # is only a fallback — shipping a stale example as the override hid new
+          # plugins (e.g. dulo/hdmovie2) for users who mount config/providers.json.
+          if [ -f config/providers.json ]; then
             cp config/providers.json "$OUT/providers.example.json"
             cp config/providers.json "$OUT/config/providers.json"
+          elif [ -f config/providers.example.json ]; then
+            cp config/providers.example.json "$OUT/providers.example.json"
+            cp config/providers.example.json "$OUT/config/providers.json"
           fi
 
           {
