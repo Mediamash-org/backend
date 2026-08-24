@@ -104,6 +104,25 @@
         "maxStreams": 4,
         "servers": ["cdn", "m4uhd"]
       }
+    },
+    {
+      "package": "@omss-server/dulo-provider",
+      "enabled": true,
+      "config": {
+        "id": "dulo",
+        "name": "Dulo",
+        "maxStreams": 4
+      }
+    },
+    {
+      "package": "@omss-server/hdmovie2-provider",
+      "enabled": true,
+      "config": {
+        "id": "hdmovie2",
+        "name": "HDMovie2",
+        "maxStreams": 3,
+        "preferHindi": true
+      }
     }
   ],
   "disabled": []

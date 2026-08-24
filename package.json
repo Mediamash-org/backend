@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build:plugins": "tsc -p plugins/sample-provider-plugin/tsconfig.json && tsc -p plugins/netmirror-provider/tsconfig.json && tsc -p plugins/peachify-provider/tsconfig.json && tsc -p plugins/vidsrc-provider/tsconfig.json && tsc -p plugins/twoembed-provider/tsconfig.json && tsc -p plugins/bingr-provider/tsconfig.json && tsc -p plugins/streamingunity-provider/tsconfig.json && tsc -p plugins/filmo-provider/tsconfig.json && tsc -p plugins/pikashow-provider/tsconfig.json && tsc -p plugins/vaultplayer-provider/tsconfig.json && tsc -p plugins/vidcore-provider/tsconfig.json && tsc -p plugins/videasy-provider/tsconfig.json",
+    "build:plugins": "tsc -p plugins/sample-provider-plugin/tsconfig.json && tsc -p plugins/netmirror-provider/tsconfig.json && tsc -p plugins/peachify-provider/tsconfig.json && tsc -p plugins/vidsrc-provider/tsconfig.json && tsc -p plugins/twoembed-provider/tsconfig.json && tsc -p plugins/bingr-provider/tsconfig.json && tsc -p plugins/streamingunity-provider/tsconfig.json && tsc -p plugins/filmo-provider/tsconfig.json && tsc -p plugins/pikashow-provider/tsconfig.json && tsc -p plugins/vaultplayer-provider/tsconfig.json && tsc -p plugins/vidcore-provider/tsconfig.json && tsc -p plugins/videasy-provider/tsconfig.json && tsc -p plugins/dulo-provider/tsconfig.json && tsc -p plugins/hdmovie2-provider/tsconfig.json",
     "build": "npm run build:plugins && tsc",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
@@ -21,7 +21,9 @@
   },
   "dependencies": {
     "@omss-server/bingr-provider": "file:plugins/bingr-provider",
+    "@omss-server/dulo-provider": "file:plugins/dulo-provider",
     "@omss-server/filmo-provider": "file:plugins/filmo-provider",
+    "@omss-server/hdmovie2-provider": "file:plugins/hdmovie2-provider",
     "@omss-server/netmirror-provider": "file:plugins/netmirror-provider",
     "@omss-server/peachify-provider": "file:plugins/peachify-provider",
     "@omss-server/pikashow-provider": "file:plugins/pikashow-provider",

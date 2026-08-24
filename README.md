@@ -60,7 +60,7 @@ OMSS_PULL_POLICY=always
 
 ## Providers
 
-Enable/disable in [`config/providers.json`](config/providers.json). Bundled packages include NetMirror, 2Embed, Bingr, Filmo, Pikashow, VaultPlayer, VidCore, Videasy, and more under `plugins/`.
+Enable/disable in [`config/providers.json`](config/providers.json). Bundled packages include NetMirror, 2Embed, Bingr, Filmo, Pikashow, VaultPlayer, VidCore, Videasy, Dulo, HDMovie2, and more under `plugins/`.
 
 **Author a new one:** start from [`plugins/sample-provider-plugin`](plugins/sample-provider-plugin) and follow the [plugin guide](docs/PROVIDER_PLUGIN_GUIDE.md).
 
